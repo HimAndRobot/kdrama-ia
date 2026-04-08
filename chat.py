@@ -4,7 +4,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from peft import PeftModel
 
 
-BASE_MODEL_ID = "google/gemma-4-E4B-it"
+BASE_MODEL_ID = "google/gemma-4-E2B-it"
 ADAPTER_DIR = "./kdrama-model"
 
 
@@ -22,7 +22,7 @@ def load_model():
         BASE_MODEL_ID,
         quantization_config=bnb_config,
         device_map="auto",
-        torch_dtype=torch.bfloat16,
+        dtype=torch.bfloat16,
     )
 
     print("Loading fine-tuned adapter...")

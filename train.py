@@ -7,7 +7,7 @@ from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from trl import SFTTrainer, SFTConfig
 
 
-MODEL_ID = "google/gemma-4-E4B-it"
+MODEL_ID = "google/gemma-4-E2B-it"
 OUTPUT_DIR = "./kdrama-model"
 DATA_FILE = "./data/kdramas.txt"
 
@@ -73,7 +73,7 @@ def main():
         MODEL_ID,
         quantization_config=bnb_config,
         device_map="auto",
-        torch_dtype=torch.bfloat16,
+        dtype=torch.bfloat16,
     )
 
     model = prepare_model_for_kbit_training(model)
