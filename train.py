@@ -1,9 +1,10 @@
 # Fine-tune Gemma 4 with QLoRA on K-drama dataset
 import os
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 import torch
 from datasets import Dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
-from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+from peft import LoraConfig, get_peft_model
 from trl import SFTTrainer, SFTConfig
 
 
@@ -76,13 +77,11 @@ def main():
         dtype=torch.bfloat16,
     )
 
-    model = prepare_model_for_kbit_training(model)
-
     lora_config = LoraConfig(
-        r=16,
-        lora_alpha=32,
+        r=8,
+        lora_alpha=16,
         lora_dropout=0.05,
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+        target_modules=["q_proj", "v_proj"],
         bias="none",
         task_type="CAUSAL_LM",
     )
@@ -101,7 +100,7 @@ def main():
         logging_steps=5,
         save_strategy="epoch",
         bf16=True,
-        max_seq_length=1024,
+        max_seq_length=512,
         dataset_text_field="text",
         gradient_checkpointing=True,
     )
