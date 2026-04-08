@@ -4,7 +4,7 @@ os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 import torch
 from datasets import Dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
-from peft import LoraConfig, get_peft_model
+from peft import LoraConfig
 from trl import SFTTrainer, SFTConfig
 
 
@@ -86,9 +86,6 @@ def main():
         task_type="CAUSAL_LM",
     )
 
-    model = get_peft_model(model, lora_config)
-    model.print_trainable_parameters()
-
     training_config = SFTConfig(
         output_dir=OUTPUT_DIR,
         num_train_epochs=3,
@@ -109,6 +106,7 @@ def main():
         model=model,
         train_dataset=dataset,
         args=training_config,
+        peft_config=lora_config,
         processing_class=tokenizer,
     )
 
