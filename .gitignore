@@ -1,7 +1,4 @@
-venv/
-__pycache__/
-*.pyc
-kdrama-model/
-.cache/
-wandb/
-*.egg-info/
+node_modules/
+data/
+.playwright-mcp/
+.env

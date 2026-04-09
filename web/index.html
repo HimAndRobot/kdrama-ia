@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KDrama IA</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="header-row">
+        <div>
+          <h1>KDrama IA</h1>
+          <p class="subtitle">Agente de recomendacao inteligente</p>
+        </div>
+        <select v-model="provider" class="provider-select" v-if="providers.length > 1">
+          <option v-for="p in providers" :key="p.id" :value="p.id">{{ p.label }}</option>
+        </select>
+        <span v-else class="provider-label">{{ providers[0]?.label }}</span>
+      </div>
+    </header>
+
+    <div v-if="tokens.input || tokens.output || tokens.thinking" class="token-bar">
+      <span class="token-item">Input: <strong>{{ tokens.input.toLocaleString() }}</strong></span>
+      <span class="token-item">Thinking: <strong>{{ tokens.thinking.toLocaleString() }}</strong></span>
+      <span class="token-item">Output: <strong>{{ tokens.output.toLocaleString() }}</strong></span>
+      <span class="token-item total">Total: <strong>{{ (tokens.input + tokens.output + tokens.thinking).toLocaleString() }}</strong></span>
+    </div>
+
+    <main class="chat-container" ref="chatContainer">
+      <div v-for="(msg, i) in messages" :key="i" :class="['message', msg.role]">
+
+        <div v-if="msg.role === 'user'" class="bubble user-bubble">
+          {{ msg.text }}
+        </div>
+
+        <div v-if="msg.role === 'assistant'" class="bubble assistant-bubble">
+
+          <!-- Cycles: thinking + tools -->
+          <div v-if="msg.cycles.length" class="cycles-section">
+            <div v-for="(cycle, ci) in msg.cycles" :key="ci" class="cycle" :class="{ collapsed: cycle.collapsed }">
+
+              <div class="cycle-header" @click="cycle.collapsed = !cycle.collapsed">
+                <span class="cycle-icon">{{ cycle.collapsed ? '>' : 'v' }}</span>
+                <span class="cycle-label">Ciclo {{ cycle.number }}</span>
+                <span v-if="cycle.toolName" class="badge tool-badge">{{ cycle.toolName }}()</span>
+                <span v-if="cycle.thinking && !cycle.thinkingDone" class="badge thinking-badge">pensando...</span>
+                <span v-if="cycle.thinkingDone" class="badge thinking-done-badge">pensamento concluido</span>
+              </div>
+
+              <div v-show="!cycle.collapsed" class="cycle-body">
+                <!-- Thinking stream -->
+                <div v-if="cycle.thinking" class="thinking-block">
+                  <div class="thinking-header">
+                    <span v-if="!cycle.thinkingDone" class="pulse-dot"></span>
+                    Pensamento
+                  </div>
+                  <div class="thinking-text">{{ cycle.thinking }}</div>
+                </div>
+
+                <!-- Tool call -->
+                <div v-if="cycle.toolName" class="tool-block">
+                  <div class="tool-call">
+                    <strong>{{ cycle.toolName }}</strong>({{ formatArgs(cycle.toolArgs) }})
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Final response -->
+          <div v-if="msg.text" class="response-text" v-html="renderMd(msg.text)"></div>
+
+          <!-- Drama cards -->
+          <div v-if="msg.cards.length" class="drama-cards">
+            <a v-for="(card, ci) in msg.cards" :key="ci" :href="card.url" target="_blank" class="drama-card">
+              <div class="card-top">
+                <span class="card-title">{{ card.title }}</span>
+                <span class="card-rank">{{ card.ranked }}</span>
+              </div>
+              <div class="card-meta">{{ card.subtitle }}</div>
+              <div class="card-genres">
+                <span v-for="g in card.genres" :key="g" class="genre-pill">{{ g }}</span>
+              </div>
+              <div class="card-tags">
+                <span v-for="t in card.tags" :key="t" class="tag-pill">{{ t }}</span>
+              </div>
+              <p class="card-synopsis">{{ card.synopsis }}...</p>
+              <div class="card-footer">
+                <span>{{ card.episodes }} eps</span>
+                <span>{{ card.aired }}</span>
+                <span>{{ card.reviewCount }} reviews</span>
+                <span v-if="card.cast.length">{{ card.cast.join(', ') }}</span>
+              </div>
+            </a>
+          </div>
+
+          <!-- Loading indicator -->
+          <div v-if="msg.streaming && !msg.text" class="loading-dots">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="input-bar">
+      <input
+        v-model="input"
+        @keydown.enter="send"
+        placeholder="Ex: Quero um drama parecido com Reset mas com mais romance..."
+        :disabled="loading"
+        ref="inputEl"
+      />
+      <button @click="send" :disabled="loading || !input.trim()">Enviar</button>
+    </footer>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
