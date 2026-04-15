@@ -25,13 +25,25 @@ class TurnReflectionExtractor:
     def __init__(self, provider) -> None:
         self.provider = provider
 
-    def extract(self, user_text: str, assistant_text: str, active_policies: List[Dict], recent_history: List[Dict]) -> Dict[str, List]:
+    def extract(
+        self,
+        user_text: str,
+        assistant_text: str,
+        active_policies: List[Dict],
+        recent_history: List[Dict],
+        memory_profile: Dict,
+        profile_source_entries: List[Dict],
+    ) -> Dict:
         active_policy_lines = json.dumps(active_policies, ensure_ascii=False)
         recent_history_lines = json.dumps(recent_history, ensure_ascii=False)
+        profile_lines = json.dumps(memory_profile, ensure_ascii=False)
+        source_entry_lines = json.dumps(self._format_profile_source_entries(profile_source_entries), ensure_ascii=False)
         prompt = f"""
 Analyze the conversation turn and extract:
 1. memory_facts: memories likely useful in future conversations
-2. policies: persistent behavioral policies that should guide future behavior
+2. memory_operations: explicit cleanup operations for old memory records
+3. policies: persistent behavioral policies that should guide future behavior
+4. profile_text: the consolidated user memory profile
 
 Return valid JSON only.
 
@@ -39,6 +51,9 @@ Rules for memory_facts:
 - Use only explicit user statements or clearly confirmed facts.
 - Use the recent conversation history to detect corrections, replacements, and contradictions.
 - If the user corrects a previously stated identity fact, output only the corrected fact, not both versions.
+- Include `operation` with one of: `set`, `replace`.
+- Use `replace` when the latest user message changes or corrects a previous memory on the same topic.
+- When using `replace`, write the new fact as the current truth, not as a note that a change happened.
 - Temporary wishes like "today I don't want romance" must be `temporary_preference`.
 - Stable facts like name, recurring preferences, constraints, or goals can use other memory types.
 - Write `summary` in Brazilian Portuguese.
@@ -54,9 +69,21 @@ Allowed memory_type values:
 - goal
 - constraint
 
+Rules for memory_operations:
+- Use this to remove stale or contradicted entries from "All active memory records".
+- Return `supersede` for memory records that should no longer be considered active because the latest turn replaced, corrected, or contradicted them.
+- Include the exact `item_key` from "All active memory records".
+- Do not supersede stable non-conflicting memories.
+- If the new memory replaces older memories with different subjects but the same real-world topic, supersede those older item_keys.
+- If no cleanup is needed, return an empty array.
+
 Rules for policies:
 - Save only explicit operating instructions from the user.
 - Use the recent conversation history to understand whether the user is refining an existing instruction or adding a new independent one.
+- Preserve still-valid constraints from an existing policy when the user refines it.
+- Remove prior policy parts only if the user clearly revoked or contradicted them.
+- Preserve explicit negative constraints, prohibitions, exclusions, replacements, and avoid/unless clauses unless clearly revoked.
+- If a current active policy is contradicted and should not guide future behavior, return that policy_slot with `operation = "deactivate"`.
 - Policy types: global, task, tool_source
 - For greetings or wording rules, prefer global.
 - For source preference like MDL or Reddit, prefer tool_source.
@@ -67,8 +94,25 @@ Rules for policies:
 - If the user adds a different instruction that can coexist with the previous one, create a different `policy_slot`.
 - Do not collapse two independent user instructions into one slot just because both are `global`.
 
+Rules for profile_text:
+- Rebuild the consolidated user memory profile in Brazilian Portuguese.
+- Use short bullet points.
+- Preserve stable non-conflicting preferences.
+- Include corrected facts from this latest turn.
+- If memories conflict, the newest evidence wins.
+- The latest conversation turn is the newest evidence.
+- Remove or rewrite older profile statements contradicted by the latest turn.
+- Do not mention timestamps.
+- If there is no useful memory, return "Nenhuma memória consolidada ainda."
+
 Current active policies:
 {active_policy_lines}
+
+Current consolidated memory profile:
+{profile_lines}
+
+All active memory records, oldest to newest:
+{source_entry_lines}
 
 Recent conversation history:
 {recent_history_lines}
@@ -83,7 +127,15 @@ JSON schema:
       "value": {{"given_name": "Gean"}},
       "confidence": 0.98,
       "temporal_weight": 1.0,
+      "operation": "set",
       "temporary_hours": null
+    }}
+  ],
+  "memory_operations": [
+    {{
+      "operation": "supersede",
+      "item_key": "candidate:abc123",
+      "reason": "Foi substituída por uma preferência mais recente."
     }}
   ],
   "policies": [
@@ -96,7 +148,8 @@ JSON schema:
       "active": true,
       "applies_to": {{}}
     }}
-  ]
+  ],
+  "profile_text": "- O nome do usuário é Gean.\\n- O usuário prefere respostas curtas."
 }}
 
 Conversation turn:
@@ -105,14 +158,11 @@ Assistant: {assistant_text}
 """.strip()
         raw = self.provider.complete_text("Return JSON only.", prompt)
         parsed = self._parse_json(raw)
-        policies = self._merge_with_active_policies(
-            parsed_policies=self._parse_policies(parsed.get("policies")),
-            user_text=user_text,
-            active_policies=active_policies,
-        )
         return {
             "memory_facts": self._parse_memory_facts(parsed.get("memory_facts")),
-            "policies": policies,
+            "memory_operations": self._parse_memory_operations(parsed.get("memory_operations")),
+            "policies": self._parse_policies(parsed.get("policies")),
+            "profile_text": self._parse_profile_text(parsed.get("profile_text")),
             "raw": raw,
         }
 
@@ -129,6 +179,9 @@ Assistant: {assistant_text}
             value = item.get("value")
             if memory_type not in ALLOWED_MEMORY_TYPES or not subject or not isinstance(value, dict):
                 continue
+            operation = str(item.get("operation", "set")).strip().lower() or "set"
+            if operation not in {"set", "replace"}:
+                operation = "set"
             if summary and "summary" not in value:
                 value = {**value, "summary": summary}
             expires_at = None
@@ -144,11 +197,35 @@ Assistant: {assistant_text}
                     value=value,
                     confidence=self._clamp(item.get("confidence"), 0.75),
                     temporal_weight=self._clamp(item.get("temporal_weight"), 0.75),
+                    operation=operation,
                     source="reflection",
                     expires_at=expires_at,
                 )
             )
         return facts
+
+    def _parse_memory_operations(self, payload) -> List[Dict]:
+        if not isinstance(payload, list):
+            return []
+        items: List[Dict] = []
+        for item in payload:
+            if not isinstance(item, dict):
+                continue
+            operation = str(item.get("operation", "")).strip().lower()
+            item_key = str(item.get("item_key", "")).strip()
+            reason = str(item.get("reason", "")).strip()
+            if operation != "supersede" or not item_key:
+                continue
+            if not (item_key.startswith("candidate:") or item_key.startswith("durable:")):
+                continue
+            items.append(
+                {
+                    "operation": operation,
+                    "item_key": item_key,
+                    "reason": reason,
+                }
+            )
+        return items
 
     def _parse_policies(self, payload) -> List[Dict]:
         if not isinstance(payload, list):
@@ -184,59 +261,29 @@ Assistant: {assistant_text}
             )
         return items
 
-    def _merge_with_active_policies(self, parsed_policies: List[Dict], user_text: str, active_policies: List[Dict]) -> List[Dict]:
-        if not parsed_policies:
-            return []
-        existing_by_slot = {
-            str(item.get("policy_slot", "")).strip().lower(): item
-            for item in active_policies
-            if str(item.get("policy_slot", "")).strip()
-        }
-        merged: List[Dict] = []
-        for policy in parsed_policies:
-            slot = policy["policy_slot"].strip().lower()
-            previous = existing_by_slot.get(slot)
-            if policy.get("operation") != "replace" or not previous:
-                merged.append(policy)
-                continue
-            merged_instruction = self._merge_policy_instruction(
-                previous_instruction=str(previous.get("instruction", "")).strip(),
-                revised_instruction=str(policy.get("instruction", "")).strip(),
-                user_text=user_text,
+    @staticmethod
+    def _parse_profile_text(payload) -> str:
+        if not isinstance(payload, str):
+            return ""
+        return payload.strip()
+
+    @staticmethod
+    def _format_profile_source_entries(entries: List[Dict]) -> List[Dict]:
+        formatted = []
+        for item in entries:
+            value = item.get("value") or {}
+            formatted.append(
+                {
+                    "kind": item.get("kind"),
+                    "item_key": item.get("item_key"),
+                    "source_ref": item.get("source_ref"),
+                    "updated_at": item.get("updated_at"),
+                    "memory_type": item.get("memory_type"),
+                    "subject": item.get("subject"),
+                    "summary": value.get("summary") or value,
+                }
             )
-            if merged_instruction:
-                policy = {**policy, "instruction": merged_instruction}
-            merged.append(policy)
-        return merged
-
-    def _merge_policy_instruction(self, previous_instruction: str, revised_instruction: str, user_text: str) -> str:
-        if not previous_instruction or not revised_instruction:
-            return revised_instruction or previous_instruction
-        prompt = f"""
-You are revising a persistent user instruction.
-
-Goal:
-- produce one merged instruction in Brazilian Portuguese
-- preserve still-valid constraints from the previous instruction
-- incorporate the user's new refinement
-- remove prior parts only if the user clearly revoked or contradicted them
-- preserve explicit negative constraints, prohibitions, exclusions, replacements, and avoid/unless clauses from the previous instruction unless the user clearly revoked them
-- if the previous instruction said to avoid or replace something, keep that avoidance or replacement in the merged result unless the user explicitly changed it
-- keep the result concise and natural
-
-Return plain text only.
-
-Previous instruction:
-{previous_instruction}
-
-User refinement:
-{user_text}
-
-Draft revised instruction:
-{revised_instruction}
-""".strip()
-        merged = self.provider.complete_text("Return one merged instruction in Brazilian Portuguese. Plain text only.", prompt).strip()
-        return merged or revised_instruction
+        return formatted
 
     @staticmethod
     def _parse_json(raw: str):

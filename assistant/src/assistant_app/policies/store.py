@@ -296,7 +296,7 @@ class PolicyStore:
                     "revision_count": revision_count,
                 }
             )
-        return resolved[:4]
+        return resolved
 
     def list_recent(self, limit: int = 20) -> List[dict]:
         with sqlite3.connect(self.sqlite_path) as conn:

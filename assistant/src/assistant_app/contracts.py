@@ -20,6 +20,7 @@ class MemoryFact:
     value: Dict[str, Any]
     confidence: float
     temporal_weight: float
+    operation: str = "set"
     status: str = "active"
     source: str = "conversation"
     expires_at: Optional[str] = None
@@ -29,4 +30,3 @@ class MemoryFact:
 class RuntimeEvent:
     type: str
     data: Dict[str, Any] = field(default_factory=dict)
-

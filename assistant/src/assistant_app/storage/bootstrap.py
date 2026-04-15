@@ -50,8 +50,17 @@ CREATE TABLE IF NOT EXISTS memory_candidates (
     value_json TEXT NOT NULL,
     confidence REAL NOT NULL,
     temporal_weight REAL NOT NULL,
+    status TEXT NOT NULL DEFAULT 'active',
     source TEXT NOT NULL,
     expires_at TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS memory_profile (
+    profile_key TEXT PRIMARY KEY,
+    profile_text TEXT NOT NULL,
+    consolidated_at TEXT NOT NULL,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -148,4 +157,10 @@ def bootstrap_storage(sqlite_path: Path, transcripts_dir: Path, debug_dir: Path)
         ):
             if column not in existing_columns:
                 conn.execute(ddl)
+        candidate_columns = {
+            row[1]
+            for row in conn.execute("PRAGMA table_info(memory_candidates)").fetchall()
+        }
+        if "status" not in candidate_columns:
+            conn.execute("ALTER TABLE memory_candidates ADD COLUMN status TEXT NOT NULL DEFAULT 'active'")
         conn.commit()

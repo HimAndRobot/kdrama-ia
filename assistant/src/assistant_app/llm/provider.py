@@ -37,20 +37,28 @@ class CodexCredentials:
 
 
 class Provider:
-    def stream_generate(self, prompt: str, recall_context: List[Dict], policies: List[Dict], recent_history: List[Dict]) -> Iterable[str]:
+    def stream_generate(self, prompt: str, memory_context: Dict, policies: List[Dict], recent_history: List[Dict]) -> Iterable[str]:
         raise NotImplementedError
 
     def complete_text(self, instructions: str, prompt: str) -> str:
         raise NotImplementedError
 
 
-def _format_recall_context(recall_context: List[Dict]) -> str:
-    if not recall_context:
-        return "Nenhum contexto adicional recuperado."
+def _format_memory_context(memory_context: Dict) -> str:
+    profile = memory_context.get("profile") or {}
+    recent_memories = memory_context.get("recent_memories") or []
 
-    lines: List[str] = ["Contexto opcional recuperado:"]
-    for item in recall_context:
-        kind = item.get("kind", "")
+    lines: List[str] = [
+        "Perfil consolidado:",
+        str(profile.get("profile_text") or "Nenhuma memória consolidada ainda."),
+        "",
+        f"Memórias recentes desde {profile.get('consolidated_at') or 'o último perfil'}:",
+    ]
+    if not recent_memories:
+        lines.append("- Nenhuma memória recente desde a última consolidação.")
+        return "\n".join(lines)
+
+    for item in recent_memories:
         memory_type = item.get("memory_type", "")
         subject = item.get("subject", "")
         value = item.get("value") or {}
@@ -60,26 +68,26 @@ def _format_recall_context(recall_context: List[Dict]) -> str:
             preferred_name = value.get("preferred_name")
             given_name = value.get("given_name")
             if preferred_name:
-                lines.append(f"- Identidade ({kind}): o usuário prefere ser chamado de {preferred_name}")
+                lines.append(f"- Identidade recente: o usuário prefere ser chamado de {preferred_name}")
                 continue
             if given_name:
-                lines.append(f"- Identidade ({kind}): o nome do usuário é {given_name}")
+                lines.append(f"- Identidade recente: o nome do usuário é {given_name}")
                 continue
 
         if memory_type == "catalog_seen":
-            lines.append(f"- Catálogo ({kind}): o usuário já viu {subject}")
+            lines.append(f"- Catálogo recente: o usuário já viu {subject}")
             continue
 
         if memory_type in ("temporary_preference", "durable_preference"):
             pref = value.get("summary") or value.get("preference") or subject
             label = "preferência temporária" if memory_type == "temporary_preference" else "preferência"
-            lines.append(f"- Preferência ({kind}): {label} = {pref}")
+            lines.append(f"- Preferência recente: {label} = {pref}")
             continue
 
         if snippet:
-            lines.append(f"- Nota ({kind}): {snippet}")
+            lines.append(f"- Nota recente: {snippet}")
         else:
-            lines.append(f"- Nota ({kind}): {memory_type} {subject} {json.dumps(value, ensure_ascii=False)}")
+            lines.append(f"- Nota recente: {memory_type} {subject} {json.dumps(value, ensure_ascii=False)}")
     return "\n".join(lines)
 
 
@@ -108,7 +116,7 @@ def _format_active_policies(policies: List[Dict]) -> str:
 
 
 class LocalFallbackProvider(Provider):
-    def stream_generate(self, prompt: str, recall_context: List[Dict], policies: List[Dict], recent_history: List[Dict]) -> Iterable[str]:
+    def stream_generate(self, prompt: str, memory_context: Dict, policies: List[Dict], recent_history: List[Dict]) -> Iterable[str]:
         lines = []
         if policies:
             lines.append("Políticas ativas:")
@@ -119,10 +127,8 @@ class LocalFallbackProvider(Provider):
             for item in recent_history[-6:]:
                 if item.get("text"):
                     lines.append(f"- {item.get('role')}: {item.get('text')}")
-        if recall_context:
-            lines.append("Contexto lembrado:")
-            for item in recall_context[:5]:
-                lines.append(f"- {item.get('snippet') or item.get('subject')}")
+        lines.append("Memória:")
+        lines.append(_format_memory_context(memory_context))
         lines.append("")
         lines.append("Resposta local provisória:")
         lines.append(f"Você disse: {prompt}")
@@ -137,23 +143,21 @@ class OpenAIProvider(Provider):
         self.api_key = api_key
         self.model = model
 
-    def stream_generate(self, prompt: str, recall_context: List[Dict], policies: List[Dict], recent_history: List[Dict]) -> Iterable[str]:
+    def stream_generate(self, prompt: str, memory_context: Dict, policies: List[Dict], recent_history: List[Dict]) -> Iterable[str]:
         system = (
             "You are a personal assistant. Respond in Brazilian Portuguese. "
-            "You will receive three blocks: persistent user policies, optional memory, and the current user message. "
+            "You will receive persistent user policies, recent conversation history, memory context, and the current user message. "
             "The current user message is always the primary thing to answer. "
             "Persistent user policies are standing orders written in natural language by or for the user. "
             "Interpret each policy by its instruction text, not by hidden tags or rigid trigger words. "
             "Apply a policy when it naturally fits the current message and conversation context; do not apply it mechanically. "
-            "Policies modify behavior that would naturally belong in the reply; they must not introduce extra greetings, titles, style flourishes, or side behavior just because the policy exists. "
-            "A normal answer does not become a greeting just because you could start it with a salutation; do not add a salutation or title to ordinary answers to satisfy a greeting/addressing policy. "
             "Do not force policy wording into the answer just because a policy exists. "
-            "Optional memory is secondary support context. Use it only when it materially helps answer the current message. "
+            "Memory context has two layers: a consolidated profile and recent memory updates since that profile. Recent memory updates override or refine the consolidated profile when they conflict. "
             "Do not imitate historical wording. "
             "Do not repeat the user's name in every answer; use it only when natural and helpful. "
             "Respond in Brazilian Portuguese."
         )
-        recall_text = _format_recall_context(recall_context)
+        memory_text = _format_memory_context(memory_context)
         policies_text = _format_active_policies(policies)
         history_text = _format_recent_history(recent_history)
         payload = {
@@ -167,8 +171,8 @@ class OpenAIProvider(Provider):
                         f"{policies_text}\n\n"
                         "RECENT CONVERSATION HISTORY\n"
                         f"{history_text}\n\n"
-                        "OPTIONAL MEMORY\n"
-                        f"{recall_text}\n\n"
+                        "MEMORY CONTEXT\n"
+                        f"{memory_text}\n\n"
                         "CURRENT USER MESSAGE\n"
                         f"{prompt}"
                     ),
@@ -260,13 +264,13 @@ class CodexProvider(Provider):
             raise RuntimeError(f"Codex auth incompleto em {self.auth_path}")
         return CodexCredentials(api_key=api_key, account_id=account_id)
 
-    def stream_generate(self, prompt: str, recall_context: List[Dict], policies: List[Dict], recent_history: List[Dict]) -> Iterable[str]:
+    def stream_generate(self, prompt: str, memory_context: Dict, policies: List[Dict], recent_history: List[Dict]) -> Iterable[str]:
         instructions = (
             "You are a personal assistant. Respond in Brazilian Portuguese.\n"
-            "You will receive exactly three blocks:\n"
+            "You will receive exactly four blocks:\n"
             "1. PERSISTENT USER POLICIES\n"
             "2. RECENT CONVERSATION HISTORY\n"
-            "3. OPTIONAL MEMORY\n"
+            "3. MEMORY CONTEXT\n"
             "4. CURRENT USER MESSAGE\n\n"
             "Contract:\n"
             "- The CURRENT USER MESSAGE is always the main thing to answer.\n"
@@ -276,13 +280,15 @@ class CodexProvider(Provider):
             "- Apply a policy when it naturally fits the current user message and the current conversation context.\n"
             "- Do not apply a policy mechanically when it does not fit.\n"
             "- Do not force policy wording into the answer just because a policy exists.\n"
-            "- OPTIONAL MEMORY is secondary support context. Use it only when it materially helps answer the current message.\n"
+            "- MEMORY CONTEXT has two layers: consolidated profile and recent memory updates since that profile.\n"
+            "- Recent memory updates are newer than the consolidated profile. If they conflict, the recent memory updates refine or override the consolidated profile.\n"
+            "- Use memory only when it materially helps answer the current message.\n"
             "- Do not imitate historical wording.\n"
             "- Do not repeat the user's name in every answer; use it only when natural and helpful.\n"
             "- If memory contains the user's name and the user asks their name, answer with it directly.\n"
             "- If memory contains a fact needed to answer, use it directly instead of claiming not to know.\n"
         )
-        recall_text = _format_recall_context(recall_context)
+        memory_text = _format_memory_context(memory_context)
         policies_text = _format_active_policies(policies)
         history_text = _format_recent_history(recent_history)
         body = self._build_body(
@@ -292,8 +298,8 @@ class CodexProvider(Provider):
                 f"{policies_text}\n\n"
                 "RECENT CONVERSATION HISTORY\n"
                 f"{history_text}\n\n"
-                "OPTIONAL MEMORY\n"
-                f"{recall_text}\n\n"
+                "MEMORY CONTEXT\n"
+                f"{memory_text}\n\n"
                 "CURRENT USER MESSAGE\n"
                 f"{prompt}"
             ),

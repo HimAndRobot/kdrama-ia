@@ -31,6 +31,14 @@ class MemoryStore:
     def __init__(self, sqlite_path: Path) -> None:
         self.sqlite_path = sqlite_path
 
+    def get_context_pack(self, profile_key: str = "main") -> Dict:
+        profile = self._get_or_create_profile(profile_key)
+        recent_memories = self._list_memories_updated_after(profile["consolidated_at"])
+        return {
+            "profile": profile,
+            "recent_memories": recent_memories,
+        }
+
     def index_transcript_entry(
         self,
         *,
@@ -61,6 +69,8 @@ class MemoryStore:
             now = utc_now()
             for fact in facts:
                 self._drop_conflicting_identity_facts(conn, fact)
+                if fact.operation == "replace":
+                    self._supersede_memory_subject(conn, fact.memory_type, fact.subject, now)
                 dedupe_key = self._fact_dedupe_key(fact)
                 existing = conn.execute(
                     """
@@ -74,7 +84,8 @@ class MemoryStore:
                     conn.execute(
                         """
                         UPDATE memory_candidates
-                        SET value_json = ?, confidence = ?, temporal_weight = ?, source = ?, expires_at = ?, updated_at = ?
+                        SET value_json = ?, confidence = ?, temporal_weight = ?, status = 'active',
+                            source = ?, expires_at = ?, updated_at = ?
                         WHERE dedupe_key = ?
                         """,
                         (
@@ -91,8 +102,8 @@ class MemoryStore:
                     conn.execute(
                         """
                         INSERT INTO memory_candidates
-                        (dedupe_key, memory_type, subject, value_json, confidence, temporal_weight, source, expires_at, created_at, updated_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        (dedupe_key, memory_type, subject, value_json, confidence, temporal_weight, status, source, expires_at, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?)
                         """,
                         (
                             dedupe_key,
@@ -107,6 +118,43 @@ class MemoryStore:
                             now,
                         ),
                     )
+            conn.commit()
+
+    def apply_memory_operations(self, operations: List[Dict]) -> None:
+        if not operations:
+            return
+        now = utc_now()
+        with sqlite3.connect(self.sqlite_path) as conn:
+            for operation in operations:
+                if operation.get("operation") != "supersede":
+                    continue
+                item_key = str(operation.get("item_key", "")).strip()
+                if item_key.startswith("candidate:"):
+                    dedupe_key = item_key.removeprefix("candidate:")
+                    conn.execute(
+                        """
+                        UPDATE memory_candidates
+                        SET status = 'superseded', updated_at = ?
+                        WHERE dedupe_key = ? AND status = 'active'
+                        """,
+                        (now, dedupe_key),
+                    )
+                    conn.execute("DELETE FROM short_term_recall WHERE item_key = ?", (item_key,))
+                    continue
+                if item_key.startswith("durable:"):
+                    try:
+                        memory_id = int(item_key.removeprefix("durable:"))
+                    except ValueError:
+                        continue
+                    conn.execute(
+                        """
+                        UPDATE memory_items
+                        SET status = 'superseded', updated_at = ?
+                        WHERE id = ? AND status = 'active'
+                        """,
+                        (now, memory_id),
+                    )
+                    conn.execute("DELETE FROM short_term_recall WHERE item_key = ?", (item_key,))
             conn.commit()
 
     def search(self, query: str, limit: int = 8, exclude_turn_id: Optional[str] = None) -> List[Dict]:
@@ -127,6 +175,7 @@ class MemoryStore:
                 """
                 SELECT dedupe_key, memory_type, subject, value_json, confidence, temporal_weight, updated_at, expires_at
                 FROM memory_candidates
+                WHERE status = 'active'
                 ORDER BY updated_at DESC
                 """
             ).fetchall()
@@ -189,6 +238,233 @@ class MemoryStore:
                 break
         return deduped
 
+    def _get_or_create_profile(self, profile_key: str) -> Dict:
+        with sqlite3.connect(self.sqlite_path) as conn:
+            row = conn.execute(
+                """
+                SELECT profile_text, consolidated_at, updated_at
+                FROM memory_profile
+                WHERE profile_key = ?
+                """,
+                (profile_key,),
+            ).fetchone()
+            if row:
+                profile_text, consolidated_at, updated_at = row
+                return {
+                    "profile_key": profile_key,
+                    "profile_text": profile_text,
+                    "consolidated_at": consolidated_at,
+                    "updated_at": updated_at,
+                }
+
+            now = utc_now()
+            entries = self._list_all_active_memory_entries(conn)
+            profile_text = self._format_profile_text(entries)
+            conn.execute(
+                """
+                INSERT INTO memory_profile (profile_key, profile_text, consolidated_at, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (profile_key, profile_text, now, now, now),
+            )
+            conn.commit()
+            return {
+                "profile_key": profile_key,
+                "profile_text": profile_text,
+                "consolidated_at": now,
+                "updated_at": now,
+            }
+
+    def rebuild_profile(self, profile_key: str = "main") -> Dict:
+        now = utc_now()
+        with sqlite3.connect(self.sqlite_path) as conn:
+            entries = self._list_all_active_memory_entries(conn)
+            profile_text = self._format_profile_text(entries)
+            conn.execute(
+                """
+                INSERT INTO memory_profile (profile_key, profile_text, consolidated_at, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(profile_key) DO UPDATE SET
+                    profile_text = excluded.profile_text,
+                    consolidated_at = excluded.consolidated_at,
+                    updated_at = excluded.updated_at
+                """,
+                (profile_key, profile_text, now, now, now),
+            )
+            conn.commit()
+        return {
+            "profile_key": profile_key,
+            "profile_text": profile_text,
+            "consolidated_at": now,
+            "updated_at": now,
+        }
+
+    def list_profile_source_entries(self) -> List[Dict]:
+        with sqlite3.connect(self.sqlite_path) as conn:
+            return self._list_all_active_memory_entries(conn)
+
+    def set_profile_text(self, profile_text: str, profile_key: str = "main") -> Dict:
+        now = utc_now()
+        text = profile_text.strip() or "Nenhuma memória consolidada ainda."
+        with sqlite3.connect(self.sqlite_path) as conn:
+            conn.execute(
+                """
+                INSERT INTO memory_profile (profile_key, profile_text, consolidated_at, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(profile_key) DO UPDATE SET
+                    profile_text = excluded.profile_text,
+                    consolidated_at = excluded.consolidated_at,
+                    updated_at = excluded.updated_at
+                """,
+                (profile_key, text, now, now, now),
+            )
+            conn.commit()
+        return {
+            "profile_key": profile_key,
+            "profile_text": text,
+            "consolidated_at": now,
+            "updated_at": now,
+        }
+
+    def _list_memories_updated_after(self, consolidated_at: str) -> List[Dict]:
+        now = datetime.now(timezone.utc)
+        with sqlite3.connect(self.sqlite_path) as conn:
+            durable_rows = conn.execute(
+                """
+                SELECT id, memory_type, subject, value_json, confidence, temporal_weight, updated_at, expires_at
+                FROM memory_items
+                WHERE status = 'active' AND updated_at > ?
+                ORDER BY updated_at ASC
+                """,
+                (consolidated_at,),
+            ).fetchall()
+            candidate_rows = conn.execute(
+                """
+                SELECT dedupe_key, memory_type, subject, value_json, confidence, temporal_weight, updated_at, expires_at
+                FROM memory_candidates
+                WHERE status = 'active' AND updated_at > ?
+                ORDER BY updated_at ASC
+                """,
+                (consolidated_at,),
+            ).fetchall()
+
+        items: List[Dict] = []
+        seen = set()
+        for row in durable_rows:
+            memory_id, memory_type, subject, value_json, confidence, temporal_weight, updated_at, expires_at = row
+            if self._is_expired(expires_at, now):
+                continue
+            value = json.loads(value_json)
+            key = (memory_type, subject)
+            seen.add(key)
+            items.append(
+                {
+                    "kind": "durable",
+                    "item_key": f"durable:{memory_id}",
+                    "source_ref": "memory_items",
+                    "memory_type": memory_type,
+                    "subject": subject,
+                    "value": value,
+                    "snippet": value.get("summary") or subject,
+                    "updated_at": updated_at,
+                }
+            )
+        for row in candidate_rows:
+            dedupe_key, memory_type, subject, value_json, confidence, temporal_weight, updated_at, expires_at = row
+            if self._is_expired(expires_at, now):
+                continue
+            value = json.loads(value_json)
+            key = (memory_type, subject)
+            if key in seen:
+                items = [item for item in items if (item["memory_type"], item["subject"]) != key]
+            seen.add(key)
+            items.append(
+                {
+                    "kind": "candidate",
+                    "item_key": f"candidate:{dedupe_key}",
+                    "source_ref": "memory_candidates",
+                    "memory_type": memory_type,
+                    "subject": subject,
+                    "value": value,
+                    "snippet": value.get("summary") or subject,
+                    "updated_at": updated_at,
+                }
+            )
+        items.sort(key=lambda item: item["updated_at"])
+        return items
+
+    def _list_all_active_memory_entries(self, conn: sqlite3.Connection) -> List[Dict]:
+        now = datetime.now(timezone.utc)
+        durable_rows = conn.execute(
+            """
+            SELECT id, memory_type, subject, value_json, updated_at, expires_at
+            FROM memory_items
+            WHERE status = 'active'
+            ORDER BY updated_at ASC
+            """
+        ).fetchall()
+        candidate_rows = conn.execute(
+            """
+            SELECT dedupe_key, memory_type, subject, value_json, updated_at, expires_at
+            FROM memory_candidates
+            WHERE status = 'active'
+            ORDER BY updated_at ASC
+            """
+        ).fetchall()
+        by_subject: Dict[tuple, Dict] = {}
+        for memory_id, memory_type, subject, value_json, updated_at, expires_at in durable_rows:
+            if self._is_expired(expires_at, now):
+                continue
+            by_subject[(memory_type, subject)] = {
+                "kind": "durable",
+                "item_key": f"durable:{memory_id}",
+                "source_ref": "memory_items",
+                "memory_type": memory_type,
+                "subject": subject,
+                "value": json.loads(value_json),
+                "updated_at": updated_at,
+            }
+        for dedupe_key, memory_type, subject, value_json, updated_at, expires_at in candidate_rows:
+            if self._is_expired(expires_at, now):
+                continue
+            by_subject[(memory_type, subject)] = {
+                "kind": "candidate",
+                "item_key": f"candidate:{dedupe_key}",
+                "source_ref": "memory_candidates",
+                "memory_type": memory_type,
+                "subject": subject,
+                "value": json.loads(value_json),
+                "updated_at": updated_at,
+            }
+        return sorted(by_subject.values(), key=lambda item: item["updated_at"])
+
+    def _format_profile_text(self, entries: List[Dict]) -> str:
+        if not entries:
+            return "Nenhuma memória consolidada ainda."
+        lines = []
+        for item in entries:
+            lines.append(f"- {self._memory_entry_to_text(item)}")
+        return "\n".join(lines)
+
+    @staticmethod
+    def _memory_entry_to_text(item: Dict) -> str:
+        memory_type = item.get("memory_type", "")
+        subject = item.get("subject", "")
+        value = item.get("value") or {}
+        summary = value.get("summary")
+        if summary:
+            return str(summary)
+        if memory_type == "user_identity":
+            if value.get("preferred_name"):
+                return f"A usuária prefere ser chamada de {value['preferred_name']}."
+            if value.get("given_name"):
+                return f"O nome da usuária é {value['given_name']}."
+        if memory_type == "catalog_seen":
+            return f"A usuária já viu {subject}."
+        if memory_type in {"temporary_preference", "durable_preference"}:
+            return json.dumps(value, ensure_ascii=False)
+        return f"{memory_type}/{subject}: {json.dumps(value, ensure_ascii=False)}"
+
     def record_recall(self, query: str, results: Iterable[Dict]) -> None:
         now = utc_now()
         with sqlite3.connect(self.sqlite_path) as conn:
@@ -210,8 +486,8 @@ class MemoryStore:
                         """,
                         (
                             existing[0] + 1,
-                            existing[1] + float(item["score"]),
-                            max(existing[2], float(item["score"])),
+                            existing[1] + float(item.get("score", 1.0)),
+                            max(existing[2], float(item.get("score", 1.0))),
                             now,
                             item["item_key"],
                         ),
@@ -229,8 +505,8 @@ class MemoryStore:
                             item["source_ref"],
                             item["snippet"][:500],
                             1,
-                            float(item["score"]),
-                            float(item["score"]),
+                            float(item.get("score", 1.0)),
+                            float(item.get("score", 1.0)),
                             now,
                             now,
                         ),
@@ -244,7 +520,7 @@ class MemoryStore:
                 SELECT r.item_key, r.recall_count, c.memory_type, c.subject, c.value_json, c.confidence, c.temporal_weight, c.expires_at
                 FROM short_term_recall r
                 JOIN memory_candidates c ON r.item_key = 'candidate:' || c.dedupe_key
-                WHERE r.promoted_at IS NULL AND r.recall_count >= ?
+                WHERE c.status = 'active' AND r.promoted_at IS NULL AND r.recall_count >= ?
                 ORDER BY r.recall_count DESC, c.updated_at DESC
                 """,
                 (min_recall_count,),
@@ -322,6 +598,7 @@ class MemoryStore:
                 """
                 SELECT memory_type, subject, value_json, confidence, temporal_weight, updated_at, expires_at
                 FROM memory_candidates
+                WHERE status = 'active'
                 ORDER BY updated_at DESC
                 LIMIT ?
                 """,
@@ -384,10 +661,11 @@ class MemoryStore:
         canonical_value = self._canonicalize_fact_value(fact.memory_type, fact.subject, fact.value)
         conn.execute(
             """
-            DELETE FROM memory_candidates
-            WHERE memory_type = ? AND subject = ? AND dedupe_key != ?
+            UPDATE memory_candidates
+            SET status = 'superseded', updated_at = ?
+            WHERE memory_type = ? AND subject = ? AND dedupe_key != ? AND status = 'active'
             """,
-            (fact.memory_type, fact.subject, self._fact_dedupe_key(fact)),
+            (utc_now(), fact.memory_type, fact.subject, self._fact_dedupe_key(fact)),
         )
         rows = conn.execute(
             """
@@ -413,6 +691,46 @@ class MemoryStore:
                     (utc_now(), item_id),
                 )
 
+    def _supersede_memory_subject(self, conn: sqlite3.Connection, memory_type: str, subject: str, now: str) -> None:
+        candidate_rows = conn.execute(
+            """
+            SELECT dedupe_key
+            FROM memory_candidates
+            WHERE memory_type = ? AND subject = ? AND status = 'active'
+            """,
+            (memory_type, subject),
+        ).fetchall()
+        for (dedupe_key,) in candidate_rows:
+            item_key = f"candidate:{dedupe_key}"
+            conn.execute(
+                """
+                UPDATE memory_candidates
+                SET status = 'superseded', updated_at = ?
+                WHERE dedupe_key = ?
+                """,
+                (now, dedupe_key),
+            )
+            conn.execute("DELETE FROM short_term_recall WHERE item_key = ?", (item_key,))
+
+        durable_rows = conn.execute(
+            """
+            SELECT id
+            FROM memory_items
+            WHERE memory_type = ? AND subject = ? AND status = 'active'
+            """,
+            (memory_type, subject),
+        ).fetchall()
+        for (memory_id,) in durable_rows:
+            conn.execute(
+                """
+                UPDATE memory_items
+                SET status = 'superseded', updated_at = ?
+                WHERE id = ?
+                """,
+                (now, memory_id),
+            )
+            conn.execute("DELETE FROM short_term_recall WHERE item_key = ?", (f"durable:{memory_id}",))
+
     @classmethod
     def _canonicalize_fact_value(cls, memory_type: str, subject: str, value: Dict) -> Dict:
         cleaned = cls._strip_summary_fields(value)
@@ -421,6 +739,8 @@ class MemoryStore:
                 raw = cleaned.get(key)
                 if isinstance(raw, str) and raw.strip():
                     return {key: normalize_text(raw)}
+        if cleaned == {} and isinstance(value.get("summary"), str) and value["summary"].strip():
+            return {"summary": normalize_text(value["summary"])}
         return cleaned
 
     @classmethod

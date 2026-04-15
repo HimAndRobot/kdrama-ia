@@ -73,26 +73,27 @@ class RuntimeService:
 
         yield RuntimeEvent("run_started", {"session_id": session.session_id, "turn_id": turn_id})
         yield RuntimeEvent("memory_recall_started", {})
-        recall_context = self.memory_store.search(message.text, exclude_turn_id=turn_id)
+        memory_context = self.memory_store.get_context_pack(message.session_key)
+        recent_memories = memory_context.get("recent_memories") or []
         active_policies = self.policy_store.resolve_for_turn(message.text)
-        self.memory_store.record_recall(message.text, recall_context)
+        self.memory_store.record_recall(message.text, recent_memories)
         self.debug_log.write(
             "recall",
             {
                 "turn_id": turn_id,
                 "message": message.text,
-                "recall_context": recall_context,
+                "memory_context": memory_context,
                 "active_policies": active_policies,
             },
         )
-        yield RuntimeEvent("memory_recall_finished", {"count": len(recall_context)})
+        yield RuntimeEvent("memory_recall_finished", {"count": len(recent_memories)})
 
-        if recall_context:
+        if recent_memories:
             yield RuntimeEvent("tool_call_started", {"skill": "memory_search"})
-            yield RuntimeEvent("tool_call_finished", {"skill": "memory_search", "count": len(recall_context)})
+            yield RuntimeEvent("tool_call_finished", {"skill": "memory_search", "count": len(recent_memories)})
 
         assembled = []
-        for chunk in self.provider.stream_generate(message.text, recall_context, active_policies, recent_history):
+        for chunk in self.provider.stream_generate(message.text, memory_context, active_policies, recent_history):
             assembled.append(chunk)
             yield RuntimeEvent("assistant_delta", {"text": chunk})
 
@@ -153,9 +154,20 @@ class RuntimeService:
         return self.job_queue.wait_for_idle(timeout_s)
 
     def _post_turn_memory_pass(self, turn_id: str, user_text: str, assistant_text: str, active_policies: List[dict], recent_history: List[dict]) -> None:
-        extracted = self.turn_reflection.extract(user_text, assistant_text, self.policy_store.list_active(), recent_history)
+        memory_context = self.memory_store.get_context_pack("main")
+        profile_source_entries = self.memory_store.list_profile_source_entries()
+        extracted = self.turn_reflection.extract(
+            user_text=user_text,
+            assistant_text=assistant_text,
+            active_policies=self.policy_store.list_active(),
+            recent_history=recent_history,
+            memory_profile=memory_context.get("profile") or {},
+            profile_source_entries=profile_source_entries,
+        )
         facts = extracted["memory_facts"]
+        memory_operations = extracted.get("memory_operations") or []
         policies = extracted["policies"]
+        profile_text = extracted.get("profile_text") or ""
         self.debug_log.write(
             "reflection",
             {
@@ -163,6 +175,8 @@ class RuntimeService:
                 "user_text": user_text,
                 "assistant_text": assistant_text,
                 "recent_history": recent_history,
+                "memory_profile": memory_context.get("profile") or {},
+                "profile_source_entries": profile_source_entries,
                 "raw": extracted["raw"],
                 "memory_facts": [
                     {
@@ -171,14 +185,20 @@ class RuntimeService:
                         "value": fact.value,
                         "confidence": fact.confidence,
                         "temporal_weight": fact.temporal_weight,
+                        "operation": fact.operation,
                         "expires_at": fact.expires_at,
                     }
                     for fact in facts
                 ],
+                "memory_operations": memory_operations,
                 "policies": policies,
+                "profile_text": profile_text,
             },
         )
+        self.memory_store.apply_memory_operations(memory_operations)
         self.memory_store.add_candidate_facts(facts)
         self.policy_store.upsert_policies(policies)
         self.policy_store.decay_stale_policies()
         self.memory_store.promote_recalled_candidates()
+        if profile_text:
+            self.memory_store.set_profile_text(profile_text, "main")
