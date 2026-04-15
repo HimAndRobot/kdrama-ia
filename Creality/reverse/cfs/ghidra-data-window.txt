@@ -1,0 +1,159 @@
+INFO  Using log config file: jar:file:/opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Framework/Generic/lib/Generic.jar!/generic.log4j.xml (LoggingInitialization)  
+INFO  Using log file: /Users/geanpedro/Library/ghidra/ghidra_12.0.4_PUBLIC/application.log (LoggingInitialization)  
+INFO  Loading user preferences: /Users/geanpedro/Library/ghidra/ghidra_12.0.4_PUBLIC/preferences (Preferences)  
+INFO  Searching for classes... (ClassSearcher)  
+INFO  Class search complete (590 ms) (ClassSearcher)  
+INFO  Initializing SSL Context (DefaultSSLContextInitializer)  
+INFO  Initializing Random Number Generator... (SecureRandomFactory)  
+INFO  Random Number Generator initialization complete: NativePRNGNonBlocking (SecureRandomFactory)  
+INFO  Trust manager disabled, cacerts have not been set (DefaultTrustManagerFactory)  
+INFO  Headless startup complete (1328 ms) (AnalyzeHeadless)  
+INFO  Class searcher loaded 58 extension points (18 false positives) (ClassSearcher)  
+INFO  HEADLESS Script Paths:
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/Base/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/SystemEmulation/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/FileFormats/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/WildcardAssembler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/BSim/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Processors/8051/ghidra_scripts
+    /Users/geanpedro/Documents/GitHub/pessoal/kdrama-ia/Creality/reverse/cfs/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/BytePatterns/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Processors/Atmel/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Debug/Debugger-rmi-trace/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/Jython/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Processors/DATA/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/FunctionID/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/PyGhidra/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/MicrosoftCodeAnalyzer/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/SwiftDemangler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/PDB/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Processors/JVM/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/Decompiler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/GnuDemangler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/VersionTracking/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/DecompilerDependent/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Processors/PIC/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Debug/Debugger/ghidra_scripts (HeadlessAnalyzer)  
+INFO  HEADLESS: execution starts (HeadlessAnalyzer)  
+INFO  Opening existing project: /tmp/ghidra_proj/serial485 (HeadlessAnalyzer)  
+INFO  Opening project: /tmp/ghidra_proj/serial485 (HeadlessProject)  
+INFO  REPORT: Processing project file: /serial_485_wrapper.cpython-38-mipsel-linux-gnu.so (HeadlessAnalyzer)  
+INFO  ANALYZING all memory and code: /serial_485_wrapper.cpython-38-mipsel-linux-gnu.so (HeadlessAnalyzer)  
+INFO  Packed database cache: /var/tmp/geanpedro-ghidra/packed-db-cache (PackedDatabaseCache)  
+INFO  Applied data type archive: generic_clib (ApplyDataArchiveAnalyzer)  
+INFO  Resolving External Symbols of [/serial_485_wrapper.cpython-38-mipsel-linux-gnu.so] - 124 unresolved symbols, no external libraries configured - skipping (ExternalSymbolResolverAnalyzer)  
+INFO  -----------------------------------------------------
+    ASCII Strings                              0.197 secs
+    Apply Data Archives                        0.397 secs
+    Call Convention ID                         0.002 secs
+    Call-Fixup Installer                       0.002 secs
+    Create Address Tables                      0.055 secs
+    Create Function                            0.001 secs
+    Data Reference                             0.027 secs
+    Decompiler Switch Analysis                 2.004 secs
+    Demangler GNU                              0.021 secs
+    Disassemble Entry Points                   0.024 secs
+    Embedded Media                             0.010 secs
+    External Entry References                  0.000 secs
+    External Symbol Resolver                   0.002 secs
+    Function ID                                0.027 secs
+    Function Start Search                      0.053 secs
+    GCC Exception Handlers                     0.007 secs
+    MIPS Constant Reference Analyzer           0.773 secs
+    MIPS Symbol                                0.025 secs
+    MIPS UnAlligned Instruction Fix            0.022 secs
+    Non-Returning Functions - Discovered       0.068 secs
+    Non-Returning Functions - Known            0.003 secs
+    Reference                                  0.049 secs
+    Shared Return Calls                        0.043 secs
+    Stack                                      0.042 secs
+    Subroutine References                      0.086 secs
+    Subroutine References - One Time           0.000 secs
+-----------------------------------------------------
+     Total Time   3 secs
+-----------------------------------------------------
+ (AutoAnalysisManager)  
+INFO  REPORT: Analysis succeeded for file: /serial_485_wrapper.cpython-38-mipsel-linux-gnu.so (HeadlessAnalyzer)  
+INFO  REPORT: Execute script: DumpDataWindow.java  (HeadlessAnalyzer)  
+INFO  SCRIPT: /Users/geanpedro/Documents/GitHub/pessoal/kdrama-ia/Creality/reverse/cfs/ghidra_scripts/DumpDataWindow.java (HeadlessAnalyzer)  
+INFO  DumpDataWindow.java> === WINDOW 00050f00 === (GhidraScript)  
+INFO  DumpDataWindow.java> 00050ee0 : 00010100 (GhidraScript)  
+INFO  DumpDataWindow.java> 00050ee4 : 00052d80 (GhidraScript)  
+INFO  DumpDataWindow.java> 00050ee8 : 0003fdbc (GhidraScript)  
+INFO  DumpDataWindow.java> 00050eec : 00000007 (GhidraScript)  
+INFO  DumpDataWindow.java> 00050ef0 : 00000000 (GhidraScript)  
+INFO  DumpDataWindow.java> 00050ef4 : 00010100 (GhidraScript)  
+INFO  DumpDataWindow.java> 00050ef8 : 00052d7c (GhidraScript)  
+INFO  DumpDataWindow.java> 00050efc : 0003ff28 (GhidraScript)  
+INFO  DumpDataWindow.java> 00050f00 : 00000009 (GhidraScript)  
+INFO  DumpDataWindow.java> 00050f04 : 00000000 (GhidraScript)  
+INFO  DumpDataWindow.java> 00050f08 : 00010100 (GhidraScript)  
+INFO  DumpDataWindow.java> 00050f0c : 00052d78 (GhidraScript)  
+INFO  DumpDataWindow.java> 00050f10 : 0003f31c (GhidraScript)  
+INFO  DumpDataWindow.java> 00050f14 : 0000001a (GhidraScript)  
+INFO  DumpDataWindow.java> 00050f18 : 00000000 (GhidraScript)  
+INFO  DumpDataWindow.java> 00050f1c : 00010100 (GhidraScript)  
+INFO  DumpDataWindow.java> 00050f20 : 00052d74 (GhidraScript)  
+INFO  DumpDataWindow.java> 00050f24 : 0003f868 (GhidraScript)  
+INFO  DumpDataWindow.java> 00050f28 : 00000010 (GhidraScript)  
+INFO  DumpDataWindow.java> 00050f2c : 00000000 (GhidraScript)  
+INFO  DumpDataWindow.java> 00050f30 : 00010100 (GhidraScript)  
+INFO  DumpDataWindow.java> 00050f34 : 00052d70 (GhidraScript)  
+INFO  DumpDataWindow.java> 00050f38 : 0003fcec (GhidraScript)  
+INFO  DumpDataWindow.java> 00050f3c : 00000008 (GhidraScript)  
+INFO  DumpDataWindow.java> 00050f40 : 00000000 (GhidraScript)  
+INFO  DumpDataWindow.java> === WINDOW 00051780 === (GhidraScript)  
+INFO  DumpDataWindow.java> 00051760 : 00000000 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051764 : 00010100 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051768 : 00052bcc (GhidraScript)  
+INFO  DumpDataWindow.java> 0005176c : 0003fca8 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051770 : 00000008 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051774 : 00000000 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051778 : 00010100 (GhidraScript)  
+INFO  DumpDataWindow.java> 0005177c : 00052bc8 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051780 : 0003f820 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051784 : 00000017 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051788 : 00000000 (GhidraScript)  
+INFO  DumpDataWindow.java> 0005178c : 00000100 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051790 : 00052bc4 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051794 : 0003fac4 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051798 : 0000000b (GhidraScript)  
+INFO  DumpDataWindow.java> 0005179c : 00000000 (GhidraScript)  
+INFO  DumpDataWindow.java> 000517a0 : 00010100 (GhidraScript)  
+INFO  DumpDataWindow.java> 000517a4 : 00052bc0 (GhidraScript)  
+INFO  DumpDataWindow.java> 000517a8 : 0003f810 (GhidraScript)  
+INFO  DumpDataWindow.java> 000517ac : 00000010 (GhidraScript)  
+INFO  DumpDataWindow.java> 000517b0 : 00000000 (GhidraScript)  
+INFO  DumpDataWindow.java> 000517b4 : 00010100 (GhidraScript)  
+INFO  DumpDataWindow.java> 000517b8 : 00052bbc (GhidraScript)  
+INFO  DumpDataWindow.java> 000517bc : 0003fa3c (GhidraScript)  
+INFO  DumpDataWindow.java> 000517c0 : 0000000c (GhidraScript)  
+INFO  DumpDataWindow.java> === WINDOW 00051a00 === (GhidraScript)  
+INFO  DumpDataWindow.java> 000519e0 : 00000000 (GhidraScript)  
+INFO  DumpDataWindow.java> 000519e4 : 00000001 (GhidraScript)  
+INFO  DumpDataWindow.java> 000519e8 : 00052b4c (GhidraScript)  
+INFO  DumpDataWindow.java> 000519ec : 0003faa0 (GhidraScript)  
+INFO  DumpDataWindow.java> 000519f0 : 0000000b (GhidraScript)  
+INFO  DumpDataWindow.java> 000519f4 : 00000000 (GhidraScript)  
+INFO  DumpDataWindow.java> 000519f8 : 00010100 (GhidraScript)  
+INFO  DumpDataWindow.java> 000519fc : 00052b48 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051a00 : 0003fa24 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051a04 : 0000000c (GhidraScript)  
+INFO  DumpDataWindow.java> 00051a08 : 00000000 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051a0c : 00010100 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051a10 : 00052b44 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051a14 : 0003f9b0 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051a18 : 0000000d (GhidraScript)  
+INFO  DumpDataWindow.java> 00051a1c : 00000000 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051a20 : 00010100 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051a24 : 00052b40 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051a28 : 0003f7d4 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051a2c : 00000010 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051a30 : 00000000 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051a34 : 00010100 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051a38 : 00052b3c (GhidraScript)  
+INFO  DumpDataWindow.java> 00051a3c : 0003f7c4 (GhidraScript)  
+INFO  DumpDataWindow.java> 00051a40 : 00000010 (GhidraScript)  
+INFO  ANALYZING changes made by post scripts: /serial_485_wrapper.cpython-38-mipsel-linux-gnu.so (HeadlessAnalyzer)  
+INFO  REPORT: Post-analysis succeeded for file: /serial_485_wrapper.cpython-38-mipsel-linux-gnu.so (HeadlessAnalyzer)  
+INFO  REPORT: Save succeeded for processed file: /serial_485_wrapper.cpython-38-mipsel-linux-gnu.so (HeadlessAnalyzer)  

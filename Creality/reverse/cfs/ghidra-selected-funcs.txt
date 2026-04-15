@@ -1,0 +1,346 @@
+INFO  Using log config file: jar:file:/opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Framework/Generic/lib/Generic.jar!/generic.log4j.xml (LoggingInitialization)  
+INFO  Using log file: /Users/geanpedro/Library/ghidra/ghidra_12.0.4_PUBLIC/application.log (LoggingInitialization)  
+INFO  Loading user preferences: /Users/geanpedro/Library/ghidra/ghidra_12.0.4_PUBLIC/preferences (Preferences)  
+INFO  Searching for classes... (ClassSearcher)  
+INFO  Class search complete (633 ms) (ClassSearcher)  
+INFO  Initializing SSL Context (DefaultSSLContextInitializer)  
+INFO  Initializing Random Number Generator... (SecureRandomFactory)  
+INFO  Random Number Generator initialization complete: NativePRNGNonBlocking (SecureRandomFactory)  
+INFO  Trust manager disabled, cacerts have not been set (DefaultTrustManagerFactory)  
+INFO  Headless startup complete (1203 ms) (AnalyzeHeadless)  
+INFO  Class searcher loaded 58 extension points (18 false positives) (ClassSearcher)  
+INFO  HEADLESS Script Paths:
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/Base/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/SystemEmulation/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/FileFormats/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/WildcardAssembler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/BSim/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Processors/8051/ghidra_scripts
+    /Users/geanpedro/Documents/GitHub/pessoal/kdrama-ia/Creality/reverse/cfs/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/BytePatterns/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Processors/Atmel/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Debug/Debugger-rmi-trace/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/Jython/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Processors/DATA/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/FunctionID/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/PyGhidra/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/MicrosoftCodeAnalyzer/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/SwiftDemangler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/PDB/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Processors/JVM/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/Decompiler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/GnuDemangler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/VersionTracking/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/DecompilerDependent/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Processors/PIC/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Debug/Debugger/ghidra_scripts (HeadlessAnalyzer)  
+INFO  HEADLESS: execution starts (HeadlessAnalyzer)  
+INFO  Opening existing project: /tmp/ghidra_proj/serial485 (HeadlessAnalyzer)  
+INFO  Opening project: /tmp/ghidra_proj/serial485 (HeadlessProject)  
+INFO  REPORT: Processing project file: /serial_485_wrapper.cpython-38-mipsel-linux-gnu.so (HeadlessAnalyzer)  
+INFO  ANALYZING all memory and code: /serial_485_wrapper.cpython-38-mipsel-linux-gnu.so (HeadlessAnalyzer)  
+INFO  Packed database cache: /var/tmp/geanpedro-ghidra/packed-db-cache (PackedDatabaseCache)  
+INFO  Applied data type archive: generic_clib (ApplyDataArchiveAnalyzer)  
+INFO  Resolving External Symbols of [/serial_485_wrapper.cpython-38-mipsel-linux-gnu.so] - 124 unresolved symbols, no external libraries configured - skipping (ExternalSymbolResolverAnalyzer)  
+INFO  -----------------------------------------------------
+    ASCII Strings                              0.176 secs
+    Apply Data Archives                        0.425 secs
+    Call Convention ID                         0.002 secs
+    Call-Fixup Installer                       0.001 secs
+    Create Address Tables                      0.036 secs
+    Create Function                            0.001 secs
+    Data Reference                             0.027 secs
+    Decompiler Switch Analysis                 1.985 secs
+    Demangler GNU                              0.021 secs
+    Disassemble Entry Points                   0.025 secs
+    Embedded Media                             0.012 secs
+    External Entry References                  0.001 secs
+    External Symbol Resolver                   0.002 secs
+    Function ID                                0.027 secs
+    Function Start Search                      0.054 secs
+    GCC Exception Handlers                     0.008 secs
+    MIPS Constant Reference Analyzer           0.781 secs
+    MIPS Symbol                                0.021 secs
+    MIPS UnAlligned Instruction Fix            0.021 secs
+    Non-Returning Functions - Discovered       0.064 secs
+    Non-Returning Functions - Known            0.002 secs
+    Reference                                  0.045 secs
+    Shared Return Calls                        0.045 secs
+    Stack                                      0.039 secs
+    Subroutine References                      0.092 secs
+    Subroutine References - One Time           0.000 secs
+-----------------------------------------------------
+     Total Time   3 secs
+-----------------------------------------------------
+ (AutoAnalysisManager)  
+INFO  REPORT: Analysis succeeded for file: /serial_485_wrapper.cpython-38-mipsel-linux-gnu.so (HeadlessAnalyzer)  
+INFO  REPORT: Execute script: DecompileSpecificFunctions.java  (HeadlessAnalyzer)  
+INFO  SCRIPT: /Users/geanpedro/Documents/GitHub/pessoal/kdrama-ia/Creality/reverse/cfs/ghidra_scripts/DecompileSpecificFunctions.java (HeadlessAnalyzer)  
+INFO  DecompileSpecificFunctions.java>  (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> === FUNCTION 00028a78 === (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> name: FUN_00028a78 (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> 
+void FUN_00028a78(int param_1,undefined4 param_2,int param_3)
+
+{
+  int iVar1;
+  uint uVar2;
+  code *pcVar3;
+  
+  if (*(undefined **)(param_1 + 4) == PTR_PyLong_Type_00052384) {
+    iVar1 = *(int *)(param_1 + 8);
+    if (iVar1 + 1U < 3) {
+      uVar2 = 0;
+      if ((iVar1 != 0) && (uVar2 = (uint)*(ushort *)(param_1 + 0xc), iVar1 == -1)) {
+        uVar2 = -uVar2;
+      }
+      (*(code *)PTR_PyLong_FromLong_0005243c)(uVar2 - 1);
+      return;
+    }
+    if (iVar1 + 4U < 9) {
+                    /* WARNING: Could not emulate address calculation at 0x00028aec */
+                    /* WARNING: Treating indirect jump as call */
+      (*(code *)(&_gp_1 + *(int *)(PTR_DAT_000522ac + (iVar1 + 4U) * 4 + -0x1508)))();
+      return;
+    }
+    pcVar3 = *(code **)(*(int *)(PTR_PyLong_Type_00052384 + 0x30) + 4);
+  }
+  else {
+    if (*(undefined **)(param_1 + 4) == PTR_PyFloat_Type_00052520) {
+      (*(code *)PTR_PyFloat_FromDouble_00052448)
+                (*(double *)(param_1 + 8) - *(double *)(PTR_DAT_000522ac + -0x20));
+      return;
+    }
+    pcVar3 = (code *)PTR_PyNumber_Subtract_000522ec;
+    if (param_3 != 0) {
+      pcVar3 = (code *)PTR_PyNumber_InPlaceSubtract_000522d8;
+    }
+  }
+  (*pcVar3)(param_1,param_2);
+  return;
+}
+
+ (GhidraScript)  
+INFO  DecompileSpecificFunctions.java>  (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> === FUNCTION 00028c48 === (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> name: FUN_00028c48 (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> 
+void FUN_00028c48(int param_1,undefined4 param_2,int param_3)
+
+{
+  int iVar1;
+  uint uVar2;
+  
+  if (*(undefined **)(param_1 + 4) != PTR_PyLong_Type_00052384) {
+    if (*(undefined **)(param_1 + 4) != PTR_PyFloat_Type_00052520) {
+      (*(code *)PTR_PyNumber_Add_00052500)();
+      return;
+    }
+    (*(code *)PTR_PyFloat_FromDouble_00052448)((double)param_3 + *(double *)(param_1 + 8));
+    return;
+  }
+  iVar1 = *(int *)(param_1 + 8);
+  if (iVar1 + 1U < 3) {
+    uVar2 = 0;
+    if ((iVar1 != 0) && (uVar2 = (uint)*(ushort *)(param_1 + 0xc), iVar1 == -1)) {
+      uVar2 = -uVar2;
+    }
+    (*(code *)PTR_PyLong_FromLong_0005243c)(param_3 + uVar2);
+    return;
+  }
+  if (8 < iVar1 + 4U) {
+                    /* WARNING: Could not recover jumptable at 0x00028de0. Too many branches */
+                    /* WARNING: Treating indirect jump as call */
+    (*(code *)**(undefined4 **)(PTR_PyLong_Type_00052384 + 0x30))(param_1,param_2);
+    return;
+  }
+                    /* WARNING: Could not emulate address calculation at 0x00028cbc */
+                    /* WARNING: Treating indirect jump as call */
+  (*(code *)(&_gp_1 + *(int *)(PTR_DAT_000522ac + (iVar1 + 4U) * 4 + -0x14e4)))();
+  return;
+}
+
+ (GhidraScript)  
+INFO  DecompileSpecificFunctions.java>  (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> === FUNCTION 00028e14 === (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> name: FUN_00028e14 (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> 
+int FUN_00028e14(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,
+                undefined4 param_5,undefined4 param_6)
+
+{
+  undefined *puVar1;
+  int iVar2;
+  
+  iVar2 = (*(code *)PTR__PyObject_GC_New_0005249c)();
+  if (iVar2 != 0) {
+    *(undefined4 *)(iVar2 + 8) = param_2;
+    *(undefined4 *)(iVar2 + 0xc) = param_3;
+    FUN_000181d0(param_3);
+    *(undefined1 *)(iVar2 + 0x44) = 0;
+    *(undefined4 *)(iVar2 + 0x40) = 0;
+    *(undefined4 *)(iVar2 + 0x24) = 0;
+    *(undefined4 *)(iVar2 + 0x28) = 0;
+    *(undefined4 *)(iVar2 + 0x10) = 0;
+    *(undefined4 *)(iVar2 + 0x14) = 0;
+    *(undefined4 *)(iVar2 + 0x18) = 0;
+    *(undefined4 *)(iVar2 + 0x1c) = 0;
+    *(undefined4 *)(iVar2 + 0x20) = 0;
+    FUN_000181d0(param_5);
+    *(undefined4 *)(iVar2 + 0x30) = param_5;
+    FUN_000181d0(param_4);
+    *(undefined4 *)(iVar2 + 0x2c) = param_4;
+    FUN_000181d0(param_6);
+    *(undefined4 *)(iVar2 + 0x34) = param_6;
+    *(undefined4 *)(iVar2 + 0x38) = 0;
+    puVar1 = PTR_PyObject_GC_Track_000524b8;
+    *(undefined4 *)(iVar2 + 0x3c) = 0;
+    (*(code *)puVar1)(iVar2);
+  }
+  return iVar2;
+}
+
+ (GhidraScript)  
+INFO  DecompileSpecificFunctions.java>  (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> === FUNCTION 000194a0 === (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> name: FUN_000194a0 (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> 
+undefined4 FUN_000194a0(int param_1,int param_2)
+
+{
+  bool bVar1;
+  int iVar2;
+  undefined4 uVar3;
+  int iVar4;
+  int *piVar5;
+  int *piVar6;
+  int iVar7;
+  
+  if (param_2 == param_1) {
+    return 1;
+  }
+  if (param_1 != 0) {
+    if (-1 < *(int *)(*(int *)(param_2 + 4) + 0x54) << 5) {
+      uVar3 = FUN_00019358();
+      return uVar3;
+    }
+    iVar7 = *(int *)(param_2 + 8);
+    piVar6 = (int *)(param_2 + 0xc);
+    iVar4 = 0;
+    bVar1 = 0 < iVar7;
+    piVar5 = piVar6;
+    while (bVar1) {
+      iVar4 = iVar4 + 1;
+      if (param_1 == *piVar5) {
+        return 1;
+      }
+      bVar1 = iVar4 < iVar7;
+      piVar5 = piVar5 + 1;
+    }
+    for (iVar4 = 0; iVar4 < iVar7; iVar4 = iVar4 + 1) {
+      iVar2 = FUN_00019358(param_1,*piVar6);
+      piVar6 = piVar6 + 1;
+      if (iVar2 != 0) {
+        return 1;
+      }
+    }
+  }
+  return 0;
+}
+
+ (GhidraScript)  
+INFO  DecompileSpecificFunctions.java>  (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> === FUNCTION 00019888 === (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> name: FUN_00019888 (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> 
+undefined4 FUN_00019888(int param_1)
+
+{
+  undefined *puVar1;
+  undefined4 uVar2;
+  int iVar3;
+  
+  puVar1 = PTR_DAT_0005229c;
+  if ((*(int *)(param_1 + 0x10) == 0x1c) && (0 < *(int *)(PTR_DAT_0005229c + 0x2920))) {
+    iVar3 = *(int *)(PTR_DAT_0005229c + 0x2920) + -1;
+    *(int *)(PTR_DAT_0005229c + 0x2920) = iVar3;
+    uVar2 = *(undefined4 *)(puVar1 + iVar3 * 4 + 0x2924);
+    (*(code *)PTR_memset_000523c4)(uVar2,0,0x1c);
+    FUN_00018c30(uVar2,param_1);
+    (*(code *)PTR_PyObject_GC_Track_000524b8)(uVar2);
+    return uVar2;
+  }
+  uVar2 = FUN_000197b4();
+  return uVar2;
+}
+
+ (GhidraScript)  
+INFO  DecompileSpecificFunctions.java>  (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> === FUNCTION 0001b800 === (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> name: FUN_0001b800 (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> 
+void FUN_0001b800(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
+
+{
+  undefined4 uVar1;
+  undefined4 uVar2;
+  undefined4 uVar3;
+  
+  uVar1 = *param_1;
+  uVar3 = param_1[1];
+  uVar2 = param_1[2];
+  *param_1 = param_2;
+  param_1[1] = param_3;
+  param_1[2] = param_4;
+  FUN_0001a404(uVar1);
+  FUN_0001a404(uVar3);
+  FUN_0001a404(uVar2);
+  return;
+}
+
+ (GhidraScript)  
+INFO  DecompileSpecificFunctions.java>  (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> === FUNCTION 0001838c === (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> name: FUN_0001838c (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> 
+void FUN_0001838c(int param_1)
+
+{
+  uint uVar1;
+  undefined4 uVar2;
+  code *UNRECOVERED_JUMPTABLE_00;
+  
+  UNRECOVERED_JUMPTABLE_00 = *(code **)(*(int *)(param_1 + 8) + 4);
+  uVar1 = *(uint *)(*(int *)(param_1 + 8) + 8);
+  uVar2 = 0;
+  if ((uVar1 & 0x20) == 0) {
+    uVar2 = *(undefined4 *)(param_1 + 0xc);
+  }
+  if ((uVar1 & 2) != 0) {
+                    /* WARNING: Could not recover jumptable at 0x000183b8. Too many branches */
+                    /* WARNING: Treating indirect jump as call */
+    (*UNRECOVERED_JUMPTABLE_00)();
+    return;
+  }
+                    /* WARNING: Could not recover jumptable at 0x000183c0. Too many branches */
+                    /* WARNING: Treating indirect jump as call */
+  (*UNRECOVERED_JUMPTABLE_00)(uVar2);
+  return;
+}
+
+ (GhidraScript)  
+INFO  DecompileSpecificFunctions.java>  (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> === FUNCTION 00052d74 === (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> not a function (GhidraScript)  
+INFO  DecompileSpecificFunctions.java>  (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> === FUNCTION 00052bc0 === (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> not a function (GhidraScript)  
+INFO  DecompileSpecificFunctions.java>  (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> === FUNCTION 00052b40 === (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> not a function (GhidraScript)  
+INFO  DecompileSpecificFunctions.java>  (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> === FUNCTION 00052b44 === (GhidraScript)  
+INFO  DecompileSpecificFunctions.java> not a function (GhidraScript)  
+INFO  ANALYZING changes made by post scripts: /serial_485_wrapper.cpython-38-mipsel-linux-gnu.so (HeadlessAnalyzer)  
+INFO  REPORT: Post-analysis succeeded for file: /serial_485_wrapper.cpython-38-mipsel-linux-gnu.so (HeadlessAnalyzer)  
+INFO  REPORT: Save succeeded for processed file: /serial_485_wrapper.cpython-38-mipsel-linux-gnu.so (HeadlessAnalyzer)  

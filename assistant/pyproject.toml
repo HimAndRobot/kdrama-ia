@@ -1,0 +1,9 @@
+[project]
+name = "assistant-app"
+version = "0.1.0"
+description = "Terminal-first personal assistant foundation"
+requires-python = ">=3.9"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+

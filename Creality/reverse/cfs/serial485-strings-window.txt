@@ -1,0 +1,354 @@
+2df2c '%.200s' object is unsliceable
+2df50 genexpr
+2df58 self
+2df60 extras.serial_485_wrapper.Serial_485_Wrapper._connect.try_connect
+2dfa4 params
+2dfac is_exist_in_send_list
+2dfc4 extras.serial_485_wrapper.Serial_485_Wrapper.is_exist_in_send_list
+2e008 send_queue_process
+2e01c extras.serial_485_wrapper.Serial_485_Wrapper.send_queue_process
+2e05c cmd_send_data_with_response
+2e078 extras.serial_485_wrapper.Serial_485_Wrapper.cmd_send_data_with_response
+2e0c4 extras.serial_485_wrapper.Serial_485_Wrapper.cmd_send_data_with_response.genexpr
+2e118 cmd_485_send_data
+2e12c extras.serial_485_wrapper.Serial_485_Wrapper.cmd_485_send_data
+2e16c extras.serial_485_wrapper.Serial_485_Wrapper._firmware_restart
+2e1ac _reconnect_timer_callback
+2e1c8 extras.serial_485_wrapper.Serial_485_Wrapper._reconnect_timer_callback
+2e210 extras.serial_485_wrapper.Serial_485_Wrapper._connect
+2e248 check_connect
+2e258 extras.serial_485_wrapper.Serial_485_Wrapper.check_connect
+2e294 extras.serial_485_wrapper.Serialhdl_485.register_response
+2e2d0 extras.serial_485_wrapper.Serialhdl_485.raw_send_wait_ack
+2e30c extras.serial_485_wrapper.Serialhdl_485.stats
+2e33c extras.serial_485_wrapper.Serialhdl_485.connect_uart
+2e374 extras.serial_485_wrapper.Serialhdl_485._start_session
+2e3ac Module 'serial_485_wrapper' has already been imported. Re-initialisation is not supported.
+2e408 %d.%d
+2e410 compiletime version %s of module '%.100s' does not match runtime version %s
+2e45c extras.serial_485_wrapper
+2e478 builtins
+2e484 cython_runtime
+2e494 collections.abc
+2e4a4 Cython module failed to register with collections.abc module
+2e4e4 backports_abc
+2e4f4 metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
+2e570 init extras.serial_485_wrapper
+2e590 extras.serial_485_wrapper.Serialhdl_485.get_response.genexpr
+2e5d0 extras.serial_485_wrapper.Serialhdl_485.get_response
+2e608 completion
+2e614 local variable '%s' referenced before assignment
+2e648 extras.serial_485_wrapper.Serialhdl_485.__init__
+2e67c __name__
+2e688 name of the generator
+2e6a0 __qualname__
+2e6b0 qualified name of the generator
+2e6d0 gi_frame
+2e6dc Frame of the generator
+2e6f4 gi_running
+2e700 gi_yieldfrom
+2e710 object being iterated by 'yield from', or None
+2e740 gi_code
+2e748 send(arg) -> send 'arg' into generator,
+2e770 return next yielded value or raise StopIteration.
+2e7a4 throw(typ[,val[,tb]]) -> raise exception in generator,
+2e7db return next yielded value or raise StopIteration.
+2e810 close
+2e818 close() -> raise GeneratorExit inside generator.
+2e84c cython_function_or_method
+2e868 __reduce__
+2e874 __module__
+2e880 func_doc
+2e88c __doc__
+2e894 func_name
+2e8a0 __self__
+2e8ac func_dict
+2e8b8 __dict__
+2e8c4 func_globals
+2e8d4 __globals__
+2e8e0 func_closure
+2e8f0 __closure__
+2e8fc func_code
+2e908 __code__
+2e914 func_defaults
+2e924 __defaults__
+2e934 __kwdefaults__
+2e944 __annotations__
+2e954 extras.serial_485_wrapper.__pyx_scope_struct_4_genexpr
+2e98c extras.serial_485_wrapper.__pyx_scope_struct_3_cmd_send_data_with_response
+2e9d8 extras.serial_485_wrapper.__pyx_scope_struct_2__connect
+2ea10 extras.serial_485_wrapper.__pyx_scope_struct_1_genexpr
+2ea48 extras.serial_485_wrapper.__pyx_scope_struct__get_response
+2ea84 _firmware_restart
+2ea98 _shutdown
+2eaa4 _disconnect
+2eab0 try_connect
+2eabc _connect
+2ebc4 00010203040506070809101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899
+2ec90 Serial_485_Wrapper.cmd_send_data_with_response
+2ecc0 cmd_485_send_data_with_response params: %s
+2ecec pending_notifications1: notifications = 
+2ed18 klippy/extras/serial_485_wrapper.py
+2ed3c do not get response, retries = %d, cmd = %s
+2ed68 Waiting for background thread to exit
+2ed90 Serialhdl_485.get_response.<locals>.genexpr
+2edbc Serial_485: _bg_thread: count < 0, count = 
+2ede8 Serial_485_Wrapper.send_queue_process
+2ee10 Serial_485_Wrapper.remove_send_data
+2ee34 Serial_485_Wrapper.register_response
+2ee5c Serial_485_Wrapper.is_exist_in_send_list
+2ee88 Serial_485_Wrapper.cmd_send_data_with_response.<locals>.genexpr
+2eec8 Serial_485_Wrapper.check_connect
+2eeec Serial_485_Wrapper.add_send_data
+2ef10 Serial_485_Wrapper._reconnect_timer_callback
+2ef40 Serial_485_Wrapper._firmware_restart
+2ef68 Serial_485_Wrapper._connect.<locals>.try_connect
+2ef9c CHeck connect: is_serial_port_exist = 
+2efc4 BOX_MODIFY_TN_DATA ADDR=%d PART=state DATA=disconnect
+2effc serial_485_wrapper_connect_send_data_break_reconnect: params = 
+2f03c cmd_485_send_data_with_response timeout, cmd = 
+2f06c Serialhdl_485.register_response
+2f08c Serialhdl_485.raw_send_wait_ack
+2f0ac Serial_485_Wrapper.cmd_485_send_data
+2f0d4 Serial_485_Wrapper._disconnect
+2f0f4 %sUnable to open serial port: %s
+2f118 %sException in serial callback
+2f138 cmd[%s] get response or timeout
+2f158 Unable to connect serial_485
+2f178 Serialhdl_485.handle_default
+2f198 Serialhdl_485._start_session
+2f1b8 Serial_485_Wrapper._shutdown
+2f1d8 cmd_send_data_with_response
+2f1f4 Serial_485: _bg_thread: count = 
+2f218 Serial_485_Wrapper._connect
+2f234 serial_485_queue_get_stats
+2f250 _bg_thread response.msg[1] = %s
+2f270 Waiting for response, retry = 
+2f290 Serialhdl_485.get_response
+2f2ac Serialhdl_485.connect_uart
+2f2c8 %s Starting serial connect
+2f2e4 get_response: is_connected:
+2f300 get_filament_sensor_state
+2f31c extras.serial_485_wrapper
+2f338 Successfully connected to 
+2f354 Serial_485_Wrapper.__init__
+2f370 _reconnect_timer_callback
+2f38c count = %s, response.msg[1] = %d
+2f3b0 Serialhdl_485.disconnect
+2f3cc Serialhdl_485._bg_thread
+2f3e8 Serial not connected, cmd = 
+2f408 run_script_from_command
+2f420 , pending_notifications = 
+2f43c  not found. Disconnecting.
+2f458 klippy:firmware_restart
+2f470 serial_485: self.name: %s
+2f48c serial_485_queue_alloc
+2f4a4 register_event_handler
+2f4bc  read EOF. Disconnecting.
+2f4d8 get_command_parameters
+2f4f0 Serialhdl_485.raw_send
+2f508 serial_485_queue_send
+2f520 serial_485_queue_pull
+2f538 serial_485_queue_free
+2f550 serial_485_queue_exit
+2f568 pending_notifications
+2f580 is_exist_in_send_list
+2f598 %snice process failed
+2f5b0 is_serial_port_exist
+2f5c8 Serialhdl_485.__init__
+2f5e0 struct pull_message *
+2f5f8 Serialhdl_485.stats
+2f60c DefaultMessages_485
+2f620 send_queue_process
+2f634 send_notifications
+2f648 reconnect_interval
+2f65c notifications_addr
+2f670 cline_in_traceback
+2f684 box_cmd_need_retry
+2f698 Serial_485_Wrapper
+2f6ac BOX_GET_ADDR_TABLE
+2f6c0 register_response
+2f6d4 raw_send_wait_ack
+2f6e8 notifications_cmd
+2f6fc klippy:disconnect
+2f710 cmd_485_send_data
+2f724 box_heartbeat_cmd
+2f738 background_thread
+2f74c Failed to connect: 
+2f760 unregister_timer
+2f774 remove_send_data
+2f788 register_command
+2f79c get_buffer_state
+2f7b0 _firmware_restart
+2f7c4 set_pre_loading
+2f7d4 set_motor_speed
+2f7e4 , serial_read_eof = 
+2f7fc %scurrent nice = %d
+2f810 retrude_process
+2f820 retries = %d, cmd = %s
+2f838 reconnect_timer
+2f848 measuring_wheel
+2f858 klippy:shutdown
+2f868 extrude_process
+2f878 SerialException
+2f888 SERIAL_SEND_STR
+2f898 serial_fd_type
+2f8a8 send_list_copy
+2f8b8 register_timer
+2f8c8 klippy:connect
+2f8d8 ,is_connected = 
+2f8ec , is_connected = 
+2f900 handle_default
+2f910 get_remain_len
+2f920 async_complete
+2f930 _start_session
+2f940 notifications
+2f950 lookup_object
+2f960 _init_messages
+2f970 check_connect
+2f980 add_send_data
+2f990 Serialhdl_485
+2f9a0 MessageParser
+2f9b0 set_box_mode
+2f9c0 respond_info
+2f9d0 is_connected
+2f9e0 get_response
+2f9f0 disconnect
+2f9fc connect_uart
+2fa0c warn_prefix
+2fa18 try_connect
+2fa24 serialqueue
+2fa30 serial_port
+2fa3c retry_count
+2fa48 params_data
+2fa54 last_params
+2fa60 get_reactor
+2fa6c get_printer
+2fa78 TIMEOUT_MAX
+2fa84 Serial port 
+2fa94 start_time
+2faa0 serialport
+2faac serial_dev
+2fab8 serial_485 
+2fac4 retries_en
+2fad0 ,read_eof:
+2fadc _disconnect
+2fae8 completion
+2faf4 add_object
+2fb00 Serial_485: 
+2fb10  timeout = 
+2fb1c , timeout = 
+2fb2c threading
+2fb38 stats_buf
+2fb44 send_list
+2fb50 msgparser
+2fb5c monotonic
+2fb68 __metaclass__
+2fb78 exclusive
+2fb84 exception
+2fb90 eventtime
+2fb9c /dev/tty13
+2fba8 char[4096]
+2fbb4 _bg_thread
+2fbc0 STATE_POS
+2fbcc _shutdown
+2fbd8 _serial
+2fbe0 response
+2fbec read_eof
+2fbf8 raw_send
+2fc04 __qualname__
+2fc14 msgproto
+2fc20 handlers
+2fc2c get_rfid
+2fc38 get_name
+2fc44 ffi_main
+2fc50 complete
+2fc5c callback
+2fc68 baudrate
+2fc74 HEAD_POS
+2fc80 DATA_POS
+2fc8c ADDR_POS
+2fc98 warning
+2fca0 timeout
+2fca8 retries
+2fcb0 reactor
+2fcb8 printer
+2fcc0 __prepare__
+2fccc pn_list
+2fcd4 logging
+2fcdc get_ffi
+2fce4 genexpr
+2fcec ffi_lib
+2fcf4 _connect
+2fd00 cmd_str
+2fd08 chelper
+2fd10 OSError
+2fd18 LEN_POS
+2fd20 IOError
+2fd28 CMD_POS
+2fd30 values
+2fd38 target
+2fd40 string
+2fd48 %sgot %s
+2fd54 serial
+2fd5c remove
+2fd64 params
+2fd6c __name__
+2fd78 __module__
+2fd84 minval
+2fd8c __import__
+2fd98 getint
+2fda0 gcmd = %s
+2fdac finish
+2fdb4 fileno
+2fdbc exists
+2fdc4 encode
+2fdcc decode
+2fdd4 ,data=
+2fddc config
+2fde4 append
+2fdec addr
+2fdf4 #addr
+2fdfc Thread
+2fe04 Serial
+2fe0c throw
+2fe14 stats
+2fe1c start
+2fe24 split
+2fe2c range
+2fe34 pause
+2fe3c parse
+2fe44 mutex
+2fe4c #msg
+2fe54 items
+2fe5c gcode
+2fe64 error
+2fe6c __enter__
+2fe78 count
+2fe80 ,cmd = 
+2fe8c close
+2fe94 clear
+2fe9c warn
+2fea4 wait
+2feac __test__
+2feb8 send
+2fec0 self
+2fec8 port
+2fed0 path
+2fed8 open
+2fee0 nice
+2fee8 name
+2fef0 __main__
+2fefc lock
+2ff04 join
+2ff0c __init__
+2ff18 info
+2ff20 gcmd
+2ff28 __exit__
+2ff34 data
+2ff3c baud
+2ff44 args
+2ff4c #addr_
+2ff54 Lock
+2ff8c __doc__
+2ff94 #cmd_

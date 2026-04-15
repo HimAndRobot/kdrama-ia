@@ -1,0 +1,98 @@
+INFO  Using log config file: jar:file:/opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Framework/Generic/lib/Generic.jar!/generic.log4j.xml (LoggingInitialization)  
+INFO  Using log file: /Users/geanpedro/Library/ghidra/ghidra_12.0.4_PUBLIC/application.log (LoggingInitialization)  
+INFO  Loading user preferences: /Users/geanpedro/Library/ghidra/ghidra_12.0.4_PUBLIC/preferences (Preferences)  
+INFO  Searching for classes... (ClassSearcher)  
+INFO  Class search complete (655 ms) (ClassSearcher)  
+INFO  Initializing SSL Context (DefaultSSLContextInitializer)  
+INFO  Initializing Random Number Generator... (SecureRandomFactory)  
+INFO  Random Number Generator initialization complete: NativePRNGNonBlocking (SecureRandomFactory)  
+INFO  Trust manager disabled, cacerts have not been set (DefaultTrustManagerFactory)  
+INFO  Headless startup complete (1389 ms) (AnalyzeHeadless)  
+INFO  Class searcher loaded 58 extension points (18 false positives) (ClassSearcher)  
+INFO  HEADLESS Script Paths:
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/Base/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/SystemEmulation/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/FileFormats/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/WildcardAssembler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/BSim/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Processors/8051/ghidra_scripts
+    /Users/geanpedro/Documents/GitHub/pessoal/kdrama-ia/Creality/reverse/cfs/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/BytePatterns/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Processors/Atmel/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Debug/Debugger-rmi-trace/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/Jython/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Processors/DATA/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/FunctionID/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/PyGhidra/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/MicrosoftCodeAnalyzer/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/SwiftDemangler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/PDB/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Processors/JVM/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/Decompiler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/GnuDemangler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/VersionTracking/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Features/DecompilerDependent/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Processors/PIC/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.0.4/libexec/Ghidra/Debug/Debugger/ghidra_scripts (HeadlessAnalyzer)  
+INFO  HEADLESS: execution starts (HeadlessAnalyzer)  
+INFO  Opening existing project: /tmp/ghidra_proj/serial485 (HeadlessAnalyzer)  
+INFO  Opening project: /tmp/ghidra_proj/serial485 (HeadlessProject)  
+INFO  REPORT: Processing project file: /serial_485_wrapper.cpython-38-mipsel-linux-gnu.so (HeadlessAnalyzer)  
+INFO  ANALYZING all memory and code: /serial_485_wrapper.cpython-38-mipsel-linux-gnu.so (HeadlessAnalyzer)  
+INFO  Packed database cache: /var/tmp/geanpedro-ghidra/packed-db-cache (PackedDatabaseCache)  
+INFO  Applied data type archive: generic_clib (ApplyDataArchiveAnalyzer)  
+INFO  Resolving External Symbols of [/serial_485_wrapper.cpython-38-mipsel-linux-gnu.so] - 124 unresolved symbols, no external libraries configured - skipping (ExternalSymbolResolverAnalyzer)  
+INFO  -----------------------------------------------------
+    ASCII Strings                              0.185 secs
+    Apply Data Archives                        0.437 secs
+    Call Convention ID                         0.003 secs
+    Call-Fixup Installer                       0.001 secs
+    Create Address Tables                      0.030 secs
+    Create Function                            0.001 secs
+    Data Reference                             0.028 secs
+    Decompiler Switch Analysis                 1.959 secs
+    Demangler GNU                              0.024 secs
+    Disassemble Entry Points                   0.024 secs
+    Embedded Media                             0.010 secs
+    External Entry References                  0.001 secs
+    External Symbol Resolver                   0.003 secs
+    Function ID                                0.027 secs
+    Function Start Search                      0.035 secs
+    GCC Exception Handlers                     0.009 secs
+    MIPS Constant Reference Analyzer           0.868 secs
+    MIPS Symbol                                0.029 secs
+    MIPS UnAlligned Instruction Fix            0.025 secs
+    Non-Returning Functions - Discovered       0.072 secs
+    Non-Returning Functions - Known            0.002 secs
+    Reference                                  0.049 secs
+    Shared Return Calls                        0.049 secs
+    Stack                                      0.039 secs
+    Subroutine References                      0.117 secs
+    Subroutine References - One Time           0.000 secs
+-----------------------------------------------------
+     Total Time   4 secs
+-----------------------------------------------------
+ (AutoAnalysisManager)  
+INFO  REPORT: Analysis succeeded for file: /serial_485_wrapper.cpython-38-mipsel-linux-gnu.so (HeadlessAnalyzer)  
+INFO  REPORT: Execute script: FindSlotTableEntries.java  (HeadlessAnalyzer)  
+INFO  SCRIPT: /Users/geanpedro/Documents/GitHub/pessoal/kdrama-ia/Creality/reverse/cfs/ghidra_scripts/FindSlotTableEntries.java (HeadlessAnalyzer)  
+INFO  FindSlotTableEntries.java> === SLOT 00052a70 === (GhidraScript)  
+INFO  FindSlotTableEntries.java> === SLOT 00052a74 === (GhidraScript)  
+INFO  FindSlotTableEntries.java> === SLOT 00052a78 === (GhidraScript)  
+INFO  FindSlotTableEntries.java> === SLOT 00052a7c === (GhidraScript)  
+INFO  FindSlotTableEntries.java> === SLOT 00052a80 === (GhidraScript)  
+INFO  FindSlotTableEntries.java> === SLOT 00052a84 === (GhidraScript)  
+INFO  FindSlotTableEntries.java> === SLOT 00052a88 === (GhidraScript)  
+INFO  FindSlotTableEntries.java> === SLOT 00052a8c === (GhidraScript)  
+INFO  FindSlotTableEntries.java> === SLOT 00052a90 === (GhidraScript)  
+INFO  FindSlotTableEntries.java> === SLOT 00052a94 === (GhidraScript)  
+INFO  FindSlotTableEntries.java> === SLOT 00052a98 === (GhidraScript)  
+INFO  FindSlotTableEntries.java> === SLOT 00052a9c === (GhidraScript)  
+INFO  FindSlotTableEntries.java> === SLOT 00052aa0 === (GhidraScript)  
+INFO  FindSlotTableEntries.java> === SLOT 00052aa4 === (GhidraScript)  
+INFO  FindSlotTableEntries.java> === SLOT 00052aa8 === (GhidraScript)  
+INFO  FindSlotTableEntries.java> === SLOT 00052aac === (GhidraScript)  
+INFO  FindSlotTableEntries.java> === SLOT 00052ab0 === (GhidraScript)  
+INFO  ANALYZING changes made by post scripts: /serial_485_wrapper.cpython-38-mipsel-linux-gnu.so (HeadlessAnalyzer)  
+INFO  REPORT: Post-analysis succeeded for file: /serial_485_wrapper.cpython-38-mipsel-linux-gnu.so (HeadlessAnalyzer)  
+INFO  REPORT: Save succeeded for processed file: /serial_485_wrapper.cpython-38-mipsel-linux-gnu.so (HeadlessAnalyzer)  
