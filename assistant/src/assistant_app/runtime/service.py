@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import uuid
 from typing import Iterable, List
 
@@ -9,7 +10,8 @@ from assistant_app.jobs.queue import JobQueue
 from assistant_app.memory.store import MemoryStore
 from assistant_app.memory.turn_reflection import TurnReflectionExtractor
 from assistant_app.sessions.manager import SessionManager, utc_now
-from assistant_app.skills.registry import SkillRegistry
+from assistant_app.skills.planner import SkillPlanner
+from assistant_app.skills.registry import SkillExecutionContext, SkillRegistry
 
 
 class RuntimeService:
@@ -29,6 +31,7 @@ class RuntimeService:
         self.job_queue = job_queue
         self.debug_log = debug_log
         self.turn_reflection = TurnReflectionExtractor(provider)
+        self.skill_planner = SkillPlanner(provider, skill_registry)
         self.history_cursors: dict[str, str] = {}
 
     def _history_cursor_for(self, session_key: str) -> str:
@@ -87,8 +90,130 @@ class RuntimeService:
             yield RuntimeEvent("tool_call_started", {"skill": "memory_search"})
             yield RuntimeEvent("tool_call_finished", {"skill": "memory_search", "count": len(recent_memories)})
 
+        skill_contexts: List[dict] = []
+        skill_decisions: List[dict] = []
+        while True:
+            decision = self.skill_planner.decide(message.text, recent_history, skill_contexts)
+            skill_decisions.append(
+                {
+                    "action": decision.action,
+                    "skill_id": decision.skill_id,
+                    "op": decision.op,
+                    "params": decision.params,
+                    "goal": decision.goal,
+                    "reason": decision.reason,
+                    "raw": decision.raw,
+                }
+            )
+            if decision.action != "skill":
+                break
+
+            skill = self.skill_registry.get(decision.skill_id)
+            if skill is None:
+                break
+
+            yield RuntimeEvent("tool_call_started", {"skill": skill.id})
+            try:
+                result = skill.handler(
+                    SkillExecutionContext(
+                        session_key=message.session_key,
+                        user_message=message.text,
+                        goal=decision.goal,
+                        turn_id=turn_id,
+                        debug_log=self.debug_log,
+                        metadata={"op": decision.op, "params": decision.params},
+                    )
+                )
+                skill_context = {
+                    "skill_id": result.skill_id,
+                    "op": decision.op,
+                    "params": decision.params,
+                    "goal": result.goal,
+                    "summary": result.summary,
+                    "payload": result.payload,
+                }
+                skill_contexts.append(skill_context)
+                self.session_manager.append_entry(
+                    session,
+                    self._build_skill_call_entry(
+                        turn_id=turn_id,
+                        skill_id=decision.skill_id,
+                        op=decision.op,
+                        params=decision.params,
+                        goal=decision.goal,
+                        summary=result.summary,
+                        status="ok",
+                    ),
+                )
+                self.debug_log.write(
+                    "skill",
+                    {
+                        "turn_id": turn_id,
+                        "decision": {
+                            "action": decision.action,
+                            "skill_id": decision.skill_id,
+                            "op": decision.op,
+                            "params": decision.params,
+                            "goal": decision.goal,
+                            "reason": decision.reason,
+                            "raw": decision.raw,
+                        },
+                        "step_index": len(skill_contexts),
+                        "result": skill_context,
+                    },
+                )
+                yield RuntimeEvent("tool_call_finished", {"skill": skill.id})
+            except Exception as error:
+                failure_context = {
+                    "skill_id": skill.id,
+                    "op": decision.op,
+                    "params": decision.params,
+                    "goal": decision.goal,
+                    "summary": f"A skill falhou antes da resposta: {error}",
+                    "payload": {"error": str(error)},
+                }
+                skill_contexts.append(failure_context)
+                self.session_manager.append_entry(
+                    session,
+                    self._build_skill_call_entry(
+                        turn_id=turn_id,
+                        skill_id=decision.skill_id,
+                        op=decision.op,
+                        params=decision.params,
+                        goal=decision.goal,
+                        summary=str(error),
+                        status="error",
+                    ),
+                )
+                self.debug_log.write(
+                    "skill",
+                    {
+                        "turn_id": turn_id,
+                        "decision": {
+                            "action": decision.action,
+                            "skill_id": decision.skill_id,
+                            "op": decision.op,
+                            "params": decision.params,
+                            "goal": decision.goal,
+                            "reason": decision.reason,
+                            "raw": decision.raw,
+                        },
+                        "step_index": len(skill_contexts),
+                        "error": str(error),
+                    },
+                )
+                yield RuntimeEvent("tool_call_finished", {"skill": skill.id, "error": str(error)})
+
         assembled = []
-        for chunk in self.provider.stream_generate(message.text, memory_context, recent_history):
+        self.debug_log.write(
+            "skill_plan",
+            {
+                "turn_id": turn_id,
+                "decisions": skill_decisions,
+                "executed_steps": skill_contexts,
+            },
+        )
+        for chunk in self.provider.stream_generate(message.text, memory_context, recent_history, skill_contexts):
             assembled.append(chunk)
             yield RuntimeEvent("assistant_delta", {"text": chunk})
 
@@ -116,7 +241,38 @@ class RuntimeService:
 
         updated_history = self.session_manager.tail(session, limit=16, since_created_at=history_cursor_at)
         self.job_queue.submit(lambda: self._post_turn_memory_pass(turn_id, message.text, final_text, updated_history))
+        self._cleanup_turn_skills(turn_id, skill_contexts)
         yield RuntimeEvent("run_finished", {"session_id": session.session_id})
+
+    def _build_skill_call_entry(
+        self,
+        turn_id: str,
+        skill_id: str,
+        op: str,
+        params: dict,
+        goal: str,
+        summary: str,
+        status: str,
+    ) -> dict:
+        params_text = json.dumps(params or {}, ensure_ascii=False, sort_keys=True)
+        if len(params_text) > 280:
+            params_text = params_text[:280].rstrip() + "... [truncated]"
+        text = f"{skill_id}.{op}({params_text})"
+        if status != "ok":
+            text += f" [{status}]"
+        return {
+            "type": "skill_call",
+            "role": "tool",
+            "turn_id": turn_id,
+            "skill_id": skill_id,
+            "op": op,
+            "params": params or {},
+            "goal": goal,
+            "summary": summary,
+            "status": status,
+            "text": text,
+            "created_at": utc_now(),
+        }
 
     def reset_session(self, session_key: str) -> str:
         session = self.session_manager.reset(session_key)
@@ -146,6 +302,25 @@ class RuntimeService:
 
     def flush_background(self, timeout_s: float = 15.0) -> bool:
         return self.job_queue.wait_for_idle(timeout_s)
+
+    def _cleanup_turn_skills(self, turn_id: str, skill_contexts: List[dict]) -> None:
+        seen: set[str] = set()
+        for item in skill_contexts:
+            skill_id = str(item.get("skill_id", "")).strip()
+            if not skill_id or skill_id in seen:
+                continue
+            seen.add(skill_id)
+            skill = self.skill_registry.get(skill_id)
+            handler = getattr(skill, "handler", None) if skill else None
+            cleanup = getattr(handler, "cleanup_turn", None)
+            if callable(cleanup):
+                try:
+                    cleanup(turn_id)
+                except Exception as error:
+                    self.debug_log.write(
+                        "skill_cleanup",
+                        {"turn_id": turn_id, "skill_id": skill_id, "error": str(error)},
+                    )
 
     def _post_turn_memory_pass(self, turn_id: str, user_text: str, assistant_text: str, recent_history: List[dict]) -> None:
         memory_context = self.memory_store.get_context_pack("main")

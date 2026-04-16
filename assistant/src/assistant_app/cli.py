@@ -12,7 +12,7 @@ from assistant_app.llm.provider import CodexProvider, LocalFallbackProvider, Ope
 from assistant_app.memory.store import MemoryStore
 from assistant_app.runtime.service import RuntimeService
 from assistant_app.sessions.manager import SessionManager
-from assistant_app.skills.builtin import build_builtin_skills
+from assistant_app.skills.builtin import build_skill_registry
 from assistant_app.storage.bootstrap import bootstrap_storage
 
 
@@ -28,7 +28,6 @@ def build_runtime() -> tuple[RuntimeService, str]:
     session_manager = SessionManager(cfg.sqlite_path, cfg.transcripts_dir)
     memory_store = MemoryStore(cfg.sqlite_path)
     debug_log = DebugLog(cfg.debug_dir)
-    registry = build_builtin_skills(memory_store)
     if _has_codex_auth_material(cfg):
         provider = CodexProvider(cfg.codex_auth_path, cfg.codex_base_url)
         provider_name = "codex"
@@ -38,6 +37,13 @@ def build_runtime() -> tuple[RuntimeService, str]:
     else:
         provider = LocalFallbackProvider()
         provider_name = "local-fallback"
+    registry = build_skill_registry(
+        cfg.skills_dir,
+        cfg.skill_artifacts_dir,
+        provider,
+        session_manager=session_manager,
+        debug_log=debug_log,
+    )
     job_queue = JobQueue()
     return RuntimeService(session_manager, memory_store, registry, provider, job_queue, debug_log), provider_name
 
@@ -47,6 +53,7 @@ def print_help() -> None:
     print("/reset     inicia uma nova sessão")
     print("/session   mostra informações da sessão")
     print("/memory    lista a memória recente")
+    print("/skills    lista as skills carregadas")
     print("/policies  legado: retorna vazio")
     print("/quit      sai")
 
@@ -87,6 +94,18 @@ def run_cli() -> None:
         if user_input == "/memory":
             print(json.dumps(runtime.list_memory(), ensure_ascii=False, indent=2))
             continue
+        if user_input == "/skills":
+            print(
+                json.dumps(
+                    [
+                        {"id": skill.id, "description": skill.description, "file_path": str(skill.file_path)}
+                        for skill in runtime.skill_registry.list_skills()
+                    ],
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            )
+            continue
         if user_input == "/policies":
             print(json.dumps(runtime.list_policies(), ensure_ascii=False, indent=2))
             continue
@@ -102,7 +121,10 @@ def run_cli() -> None:
                 elif event.type == "tool_call_started":
                     print(f"[skill] {event.data['skill']} iniciado")
                 elif event.type == "tool_call_finished":
-                    print(f"[skill] {event.data['skill']} concluído")
+                    if event.data.get("error"):
+                        print(f"[skill] {event.data['skill']} falhou: {event.data['error']}")
+                    else:
+                        print(f"[skill] {event.data['skill']} concluído")
                 elif event.type == "assistant_delta":
                     print(event.data["text"], end="", flush=True)
                 elif event.type == "run_finished":

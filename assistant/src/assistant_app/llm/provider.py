@@ -37,7 +37,13 @@ class CodexCredentials:
 
 
 class Provider:
-    def stream_generate(self, prompt: str, memory_context: Dict, recent_history: List[Dict]) -> Iterable[str]:
+    def stream_generate(
+        self,
+        prompt: str,
+        memory_context: Dict,
+        recent_history: List[Dict],
+        skill_contexts: List[Dict] | None = None,
+    ) -> Iterable[str]:
         raise NotImplementedError
 
     def complete_text(self, instructions: str, prompt: str) -> str:
@@ -104,8 +110,34 @@ def _format_recent_history(recent_history: List[Dict]) -> str:
     return "\n".join(lines) if lines else "Nenhum histórico recente."
 
 
+def _format_skill_context(skill_contexts: List[Dict] | None) -> str:
+    if not skill_contexts:
+        return "Nenhuma skill foi executada neste turno."
+
+    lines: List[str] = []
+    for index, skill_context in enumerate(skill_contexts, start=1):
+        lines.append(f"Passo {index}:")
+        lines.append(f"- Skill executada: {skill_context.get('skill_id') or 'desconhecida'}")
+        lines.append(f"- Objetivo: {skill_context.get('goal') or 'não informado'}")
+        lines.append(f"- Resumo: {skill_context.get('summary') or 'sem resumo'}")
+        payload = skill_context.get("payload")
+        if payload:
+            payload_text = json.dumps(payload, ensure_ascii=False, indent=2)
+            if len(payload_text) > 12000:
+                payload_text = payload_text[:12000].rstrip() + "\n... [truncated]"
+            lines.extend(["- Saída estruturada:", payload_text])
+        lines.append("")
+    return "\n".join(lines).strip()
+
+
 class LocalFallbackProvider(Provider):
-    def stream_generate(self, prompt: str, memory_context: Dict, recent_history: List[Dict]) -> Iterable[str]:
+    def stream_generate(
+        self,
+        prompt: str,
+        memory_context: Dict,
+        recent_history: List[Dict],
+        skill_contexts: List[Dict] | None = None,
+    ) -> Iterable[str]:
         lines = []
         if recent_history:
             lines.append("Histórico recente:")
@@ -114,6 +146,9 @@ class LocalFallbackProvider(Provider):
                     lines.append(f"- {item.get('role')}: {item.get('text')}")
         lines.append("Memória:")
         lines.append(_format_memory_context(memory_context))
+        lines.append("")
+        lines.append("Skill:")
+        lines.append(_format_skill_context(skill_contexts))
         lines.append("")
         lines.append("Resposta local provisória:")
         lines.append(f"Você disse: {prompt}")
@@ -128,18 +163,26 @@ class OpenAIProvider(Provider):
         self.api_key = api_key
         self.model = model
 
-    def stream_generate(self, prompt: str, memory_context: Dict, recent_history: List[Dict]) -> Iterable[str]:
+    def stream_generate(
+        self,
+        prompt: str,
+        memory_context: Dict,
+        recent_history: List[Dict],
+        skill_contexts: List[Dict] | None = None,
+    ) -> Iterable[str]:
         system = (
             "You are a personal assistant. Respond in Brazilian Portuguese. "
-            "You will receive recent conversation history, memory context, and the current user message. "
+            "You will receive recent conversation history, memory context, optional skill output, and the current user message. "
             "The current user message is always the primary thing to answer. "
             "Memory context has two layers: a consolidated profile and recent memory updates since that profile. Recent memory updates override or refine the consolidated profile when they conflict. "
+            "If skill output is present, treat it as tool output from this turn and use it directly. "
             "Do not imitate historical wording. "
             "Do not repeat the user's name in every answer; use it only when natural and helpful. "
             "Respond in Brazilian Portuguese."
         )
         memory_text = _format_memory_context(memory_context)
         history_text = _format_recent_history(recent_history)
+        skill_text = _format_skill_context(skill_contexts)
         payload = {
             "model": self.model,
             "input": [
@@ -151,6 +194,8 @@ class OpenAIProvider(Provider):
                         f"{history_text}\n\n"
                         "MEMORY CONTEXT\n"
                         f"{memory_text}\n\n"
+                        "SKILL OUTPUT\n"
+                        f"{skill_text}\n\n"
                         "CURRENT USER MESSAGE\n"
                         f"{prompt}"
                     ),
@@ -242,18 +287,26 @@ class CodexProvider(Provider):
             raise RuntimeError(f"Codex auth incompleto em {self.auth_path}")
         return CodexCredentials(api_key=api_key, account_id=account_id)
 
-    def stream_generate(self, prompt: str, memory_context: Dict, recent_history: List[Dict]) -> Iterable[str]:
+    def stream_generate(
+        self,
+        prompt: str,
+        memory_context: Dict,
+        recent_history: List[Dict],
+        skill_contexts: List[Dict] | None = None,
+    ) -> Iterable[str]:
         instructions = (
             "You are a personal assistant. Respond in Brazilian Portuguese.\n"
-            "You will receive exactly three blocks:\n"
+            "You will receive exactly four blocks:\n"
             "1. RECENT CONVERSATION HISTORY\n"
             "2. MEMORY CONTEXT\n"
-            "3. CURRENT USER MESSAGE\n\n"
+            "3. SKILL OUTPUT\n"
+            "4. CURRENT USER MESSAGE\n\n"
             "Contract:\n"
             "- The CURRENT USER MESSAGE is always the main thing to answer.\n"
             "- RECENT CONVERSATION HISTORY is the primary conversational context and should be used to preserve continuity.\n"
             "- MEMORY CONTEXT has two layers: consolidated profile and recent memory updates since that profile.\n"
             "- Recent memory updates are newer than the consolidated profile. If they conflict, the recent memory updates refine or override the consolidated profile.\n"
+            "- If SKILL OUTPUT is present, it is real tool output from this turn. Use it directly when it helps answer.\n"
             "- Use memory only when it materially helps answer the current message.\n"
             "- Do not imitate historical wording.\n"
             "- Do not repeat the user's name in every answer; use it only when natural and helpful.\n"
@@ -262,6 +315,7 @@ class CodexProvider(Provider):
         )
         memory_text = _format_memory_context(memory_context)
         history_text = _format_recent_history(recent_history)
+        skill_text = _format_skill_context(skill_contexts)
         body = self._build_body(
             instructions=instructions,
             prompt=(
@@ -269,6 +323,8 @@ class CodexProvider(Provider):
                 f"{history_text}\n\n"
                 "MEMORY CONTEXT\n"
                 f"{memory_text}\n\n"
+                "SKILL OUTPUT\n"
+                f"{skill_text}\n\n"
                 "CURRENT USER MESSAGE\n"
                 f"{prompt}"
             ),

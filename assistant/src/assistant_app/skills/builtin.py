@@ -1,18 +1,30 @@
 from __future__ import annotations
 
-from assistant_app.memory.store import MemoryStore
-from assistant_app.skills.registry import Skill, SkillRegistry
+from pathlib import Path
+
+from assistant_app.skills.conversation_history_tool import ConversationHistoryTool
+from assistant_app.sessions.manager import SessionManager
+from assistant_app.skills.history_tool import SkillHistoryTool
+from assistant_app.skills.playwright_cli import PlaywrightCliSkill
+from assistant_app.skills.registry import SkillRegistry
 
 
-def build_builtin_skills(memory_store: MemoryStore) -> SkillRegistry:
-    registry = SkillRegistry()
-
-    def memory_search(query: str) -> dict:
-        return {"items": memory_store.search(query)}
-
-    def memory_list() -> dict:
-        return {"items": memory_store.list_recent()}
-
-    registry.register(Skill(id="memory_search", description="Search recalled memory facts", handler=memory_search))
-    registry.register(Skill(id="memory_list", description="List recent memory items", handler=memory_list))
-    return registry
+def build_skill_registry(
+    skills_dir: Path,
+    skill_artifacts_dir: Path,
+    provider,
+    session_manager: SessionManager,
+    debug_log=None,
+) -> SkillRegistry:
+    workspace_root = skills_dir.parent
+    handlers = {
+        "playwright-browser": PlaywrightCliSkill(
+            artifacts_dir=skill_artifacts_dir / "playwright-browser",
+            workspace_root=workspace_root,
+            provider=provider,
+            debug_log=debug_log,
+        ),
+        "conversation-history": ConversationHistoryTool(session_manager=session_manager, provider=provider),
+        "skill-history": SkillHistoryTool(session_manager=session_manager),
+    }
+    return SkillRegistry.load_from_dir(skills_dir, handlers)

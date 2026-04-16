@@ -10,6 +10,8 @@ class AppConfig:
     root_dir: Path
     data_dir: Path
     debug_dir: Path
+    skills_dir: Path
+    skill_artifacts_dir: Path
     transcripts_dir: Path
     sqlite_path: Path
     codex_auth_path: Path
@@ -28,6 +30,8 @@ def load_config() -> AppConfig:
         root_dir=root_dir,
         data_dir=data_dir,
         debug_dir=debug_dir,
+        skills_dir=root_dir / "skills",
+        skill_artifacts_dir=data_dir / "skills",
         transcripts_dir=transcripts_dir,
         sqlite_path=sqlite_path,
         codex_auth_path=Path(os.getenv("CODEX_AUTH_JSON_PATH", str(Path.home() / ".codex" / "auth.json"))),
