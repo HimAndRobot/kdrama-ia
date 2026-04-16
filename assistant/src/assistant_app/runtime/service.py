@@ -8,7 +8,6 @@ from assistant_app.debug_log import DebugLog
 from assistant_app.jobs.queue import JobQueue
 from assistant_app.memory.store import MemoryStore
 from assistant_app.memory.turn_reflection import TurnReflectionExtractor
-from assistant_app.policies.store import PolicyStore
 from assistant_app.sessions.manager import SessionManager, utc_now
 from assistant_app.skills.registry import SkillRegistry
 
@@ -18,7 +17,6 @@ class RuntimeService:
         self,
         session_manager: SessionManager,
         memory_store: MemoryStore,
-        policy_store: PolicyStore,
         skill_registry: SkillRegistry,
         provider,
         job_queue: JobQueue,
@@ -26,7 +24,6 @@ class RuntimeService:
     ) -> None:
         self.session_manager = session_manager
         self.memory_store = memory_store
-        self.policy_store = policy_store
         self.skill_registry = skill_registry
         self.provider = provider
         self.job_queue = job_queue
@@ -75,7 +72,6 @@ class RuntimeService:
         yield RuntimeEvent("memory_recall_started", {})
         memory_context = self.memory_store.get_context_pack(message.session_key)
         recent_memories = memory_context.get("recent_memories") or []
-        active_policies = self.policy_store.resolve_for_turn(message.text)
         self.memory_store.record_recall(message.text, recent_memories)
         self.debug_log.write(
             "recall",
@@ -83,7 +79,6 @@ class RuntimeService:
                 "turn_id": turn_id,
                 "message": message.text,
                 "memory_context": memory_context,
-                "active_policies": active_policies,
             },
         )
         yield RuntimeEvent("memory_recall_finished", {"count": len(recent_memories)})
@@ -93,7 +88,7 @@ class RuntimeService:
             yield RuntimeEvent("tool_call_finished", {"skill": "memory_search", "count": len(recent_memories)})
 
         assembled = []
-        for chunk in self.provider.stream_generate(message.text, memory_context, active_policies, recent_history):
+        for chunk in self.provider.stream_generate(message.text, memory_context, recent_history):
             assembled.append(chunk)
             yield RuntimeEvent("assistant_delta", {"text": chunk})
 
@@ -120,7 +115,7 @@ class RuntimeService:
         )
 
         updated_history = self.session_manager.tail(session, limit=16, since_created_at=history_cursor_at)
-        self.job_queue.submit(lambda: self._post_turn_memory_pass(turn_id, message.text, final_text, active_policies, updated_history))
+        self.job_queue.submit(lambda: self._post_turn_memory_pass(turn_id, message.text, final_text, updated_history))
         yield RuntimeEvent("run_finished", {"session_id": session.session_id})
 
     def reset_session(self, session_key: str) -> str:
@@ -147,26 +142,23 @@ class RuntimeService:
         return self.memory_store.list_recent()
 
     def list_policies(self) -> List[dict]:
-        self.job_queue.wait_for_idle(8.0)
-        return self.policy_store.list_recent()
+        return []
 
     def flush_background(self, timeout_s: float = 15.0) -> bool:
         return self.job_queue.wait_for_idle(timeout_s)
 
-    def _post_turn_memory_pass(self, turn_id: str, user_text: str, assistant_text: str, active_policies: List[dict], recent_history: List[dict]) -> None:
+    def _post_turn_memory_pass(self, turn_id: str, user_text: str, assistant_text: str, recent_history: List[dict]) -> None:
         memory_context = self.memory_store.get_context_pack("main")
         profile_source_entries = self.memory_store.list_profile_source_entries()
         extracted = self.turn_reflection.extract(
             user_text=user_text,
             assistant_text=assistant_text,
-            active_policies=self.policy_store.list_active(),
             recent_history=recent_history,
             memory_profile=memory_context.get("profile") or {},
             profile_source_entries=profile_source_entries,
         )
         facts = extracted["memory_facts"]
         memory_operations = extracted.get("memory_operations") or []
-        policies = extracted["policies"]
         profile_text = extracted.get("profile_text") or ""
         self.debug_log.write(
             "reflection",
@@ -191,14 +183,11 @@ class RuntimeService:
                     for fact in facts
                 ],
                 "memory_operations": memory_operations,
-                "policies": policies,
                 "profile_text": profile_text,
             },
         )
         self.memory_store.apply_memory_operations(memory_operations)
         self.memory_store.add_candidate_facts(facts)
-        self.policy_store.upsert_policies(policies)
-        self.policy_store.decay_stale_policies()
         self.memory_store.promote_recalled_candidates()
         if profile_text:
             self.memory_store.set_profile_text(profile_text, "main")

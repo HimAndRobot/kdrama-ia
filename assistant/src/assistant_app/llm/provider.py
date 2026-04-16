@@ -37,7 +37,7 @@ class CodexCredentials:
 
 
 class Provider:
-    def stream_generate(self, prompt: str, memory_context: Dict, policies: List[Dict], recent_history: List[Dict]) -> Iterable[str]:
+    def stream_generate(self, prompt: str, memory_context: Dict, recent_history: List[Dict]) -> Iterable[str]:
         raise NotImplementedError
 
     def complete_text(self, instructions: str, prompt: str) -> str:
@@ -104,24 +104,9 @@ def _format_recent_history(recent_history: List[Dict]) -> str:
     return "\n".join(lines) if lines else "Nenhum histórico recente."
 
 
-def _format_active_policies(policies: List[Dict]) -> str:
-    if not policies:
-        return "Nenhuma."
-    lines: List[str] = []
-    for item in policies:
-        instruction = item.get("instruction", "").strip()
-        if instruction:
-            lines.append(f"- {instruction}")
-    return "\n".join(lines)
-
-
 class LocalFallbackProvider(Provider):
-    def stream_generate(self, prompt: str, memory_context: Dict, policies: List[Dict], recent_history: List[Dict]) -> Iterable[str]:
+    def stream_generate(self, prompt: str, memory_context: Dict, recent_history: List[Dict]) -> Iterable[str]:
         lines = []
-        if policies:
-            lines.append("Políticas ativas:")
-            for item in policies:
-                lines.append(f"- {item.get('instruction')}")
         if recent_history:
             lines.append("Histórico recente:")
             for item in recent_history[-6:]:
@@ -143,22 +128,17 @@ class OpenAIProvider(Provider):
         self.api_key = api_key
         self.model = model
 
-    def stream_generate(self, prompt: str, memory_context: Dict, policies: List[Dict], recent_history: List[Dict]) -> Iterable[str]:
+    def stream_generate(self, prompt: str, memory_context: Dict, recent_history: List[Dict]) -> Iterable[str]:
         system = (
             "You are a personal assistant. Respond in Brazilian Portuguese. "
-            "You will receive persistent user policies, recent conversation history, memory context, and the current user message. "
+            "You will receive recent conversation history, memory context, and the current user message. "
             "The current user message is always the primary thing to answer. "
-            "Persistent user policies are standing orders written in natural language by or for the user. "
-            "Interpret each policy by its instruction text, not by hidden tags or rigid trigger words. "
-            "Apply a policy when it naturally fits the current message and conversation context; do not apply it mechanically. "
-            "Do not force policy wording into the answer just because a policy exists. "
             "Memory context has two layers: a consolidated profile and recent memory updates since that profile. Recent memory updates override or refine the consolidated profile when they conflict. "
             "Do not imitate historical wording. "
             "Do not repeat the user's name in every answer; use it only when natural and helpful. "
             "Respond in Brazilian Portuguese."
         )
         memory_text = _format_memory_context(memory_context)
-        policies_text = _format_active_policies(policies)
         history_text = _format_recent_history(recent_history)
         payload = {
             "model": self.model,
@@ -167,8 +147,6 @@ class OpenAIProvider(Provider):
                 {
                     "role": "user",
                     "content": (
-                        "PERSISTENT USER POLICIES\n"
-                        f"{policies_text}\n\n"
                         "RECENT CONVERSATION HISTORY\n"
                         f"{history_text}\n\n"
                         "MEMORY CONTEXT\n"
@@ -264,22 +242,16 @@ class CodexProvider(Provider):
             raise RuntimeError(f"Codex auth incompleto em {self.auth_path}")
         return CodexCredentials(api_key=api_key, account_id=account_id)
 
-    def stream_generate(self, prompt: str, memory_context: Dict, policies: List[Dict], recent_history: List[Dict]) -> Iterable[str]:
+    def stream_generate(self, prompt: str, memory_context: Dict, recent_history: List[Dict]) -> Iterable[str]:
         instructions = (
             "You are a personal assistant. Respond in Brazilian Portuguese.\n"
-            "You will receive exactly four blocks:\n"
-            "1. PERSISTENT USER POLICIES\n"
-            "2. RECENT CONVERSATION HISTORY\n"
-            "3. MEMORY CONTEXT\n"
-            "4. CURRENT USER MESSAGE\n\n"
+            "You will receive exactly three blocks:\n"
+            "1. RECENT CONVERSATION HISTORY\n"
+            "2. MEMORY CONTEXT\n"
+            "3. CURRENT USER MESSAGE\n\n"
             "Contract:\n"
             "- The CURRENT USER MESSAGE is always the main thing to answer.\n"
             "- RECENT CONVERSATION HISTORY is the primary conversational context and should be used to preserve continuity.\n"
-            "- PERSISTENT USER POLICIES are standing orders written in natural language by or for the user.\n"
-            "- Interpret each policy by the instruction text itself. Do not narrow or override it with hidden metadata, tags, or trigger words.\n"
-            "- Apply a policy when it naturally fits the current user message and the current conversation context.\n"
-            "- Do not apply a policy mechanically when it does not fit.\n"
-            "- Do not force policy wording into the answer just because a policy exists.\n"
             "- MEMORY CONTEXT has two layers: consolidated profile and recent memory updates since that profile.\n"
             "- Recent memory updates are newer than the consolidated profile. If they conflict, the recent memory updates refine or override the consolidated profile.\n"
             "- Use memory only when it materially helps answer the current message.\n"
@@ -289,13 +261,10 @@ class CodexProvider(Provider):
             "- If memory contains a fact needed to answer, use it directly instead of claiming not to know.\n"
         )
         memory_text = _format_memory_context(memory_context)
-        policies_text = _format_active_policies(policies)
         history_text = _format_recent_history(recent_history)
         body = self._build_body(
             instructions=instructions,
             prompt=(
-                "PERSISTENT USER POLICIES\n"
-                f"{policies_text}\n\n"
                 "RECENT CONVERSATION HISTORY\n"
                 f"{history_text}\n\n"
                 "MEMORY CONTEXT\n"

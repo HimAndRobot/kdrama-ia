@@ -10,7 +10,6 @@ from assistant_app.debug_log import DebugLog
 from assistant_app.jobs.queue import JobQueue
 from assistant_app.llm.provider import CodexProvider, LocalFallbackProvider, OpenAIProvider
 from assistant_app.memory.store import MemoryStore
-from assistant_app.policies.store import PolicyStore
 from assistant_app.runtime.service import RuntimeService
 from assistant_app.sessions.manager import SessionManager
 from assistant_app.skills.builtin import build_builtin_skills
@@ -28,7 +27,6 @@ def build_runtime() -> tuple[RuntimeService, str]:
     bootstrap_storage(cfg.sqlite_path, cfg.transcripts_dir, cfg.debug_dir)
     session_manager = SessionManager(cfg.sqlite_path, cfg.transcripts_dir)
     memory_store = MemoryStore(cfg.sqlite_path)
-    policy_store = PolicyStore(cfg.sqlite_path)
     debug_log = DebugLog(cfg.debug_dir)
     registry = build_builtin_skills(memory_store)
     if _has_codex_auth_material(cfg):
@@ -41,7 +39,7 @@ def build_runtime() -> tuple[RuntimeService, str]:
         provider = LocalFallbackProvider()
         provider_name = "local-fallback"
     job_queue = JobQueue()
-    return RuntimeService(session_manager, memory_store, policy_store, registry, provider, job_queue, debug_log), provider_name
+    return RuntimeService(session_manager, memory_store, registry, provider, job_queue, debug_log), provider_name
 
 
 def print_help() -> None:
@@ -49,7 +47,7 @@ def print_help() -> None:
     print("/reset     inicia uma nova sessão")
     print("/session   mostra informações da sessão")
     print("/memory    lista a memória recente")
-    print("/policies  lista as políticas ativas")
+    print("/policies  legado: retorna vazio")
     print("/quit      sai")
 
 
